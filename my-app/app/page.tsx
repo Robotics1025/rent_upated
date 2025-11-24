@@ -1,65 +1,127 @@
-import Image from "next/image";
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import Features from "./components/Features";
+import Stats from "./components/Stats";
+import Testimonials from "./components/Testimonials";
+import Pricing from "./components/Pricing";
+import Footer from "./components/Footer";
+import WhatsAppButton from "./components/WhatsAppButton";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen">
+      <Navbar />
+      <Hero />
+      <Features />
+      <Stats />
+      <Testimonials />
+      <Pricing />
+      
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-24 px-4 bg-gradient-to-br from-indigo-50 to-purple-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-block mb-4 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold">
+              📋 HOW IT WORKS
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Get Started in Minutes
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Three simple steps to transform your property management experience
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* Connection Lines */}
+            <div className="hidden md:block absolute top-24 left-1/4 right-1/4 h-1 bg-gradient-to-r from-blue-300 via-purple-300 to-indigo-300"></div>
+            
+            <div className="relative text-center group">
+              <div className="relative inline-block mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl flex items-center justify-center text-4xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform duration-300">
+                  1
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <span className="text-lg">✨</span>
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Create Account</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Sign up in seconds with your email. No credit card required for the 30-day trial period.
+              </p>
+            </div>
+            
+            <div className="relative text-center group">
+              <div className="relative inline-block mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl flex items-center justify-center text-4xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform duration-300">
+                  2
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center">
+                  <span className="text-lg">🏢</span>
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Add Properties & Tenants</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Import your property data or add them manually. Invite tenants to join their portal.
+              </p>
+            </div>
+            
+            <div className="relative text-center group">
+              <div className="relative inline-block mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-2xl flex items-center justify-center text-4xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform duration-300">
+                  3
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center">
+                  <span className="text-lg">🚀</span>
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Start Managing</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Automate rent collection, track payments, and manage everything from your dashboard.
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-16 text-center">
+            <button className="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition shadow-xl text-lg font-semibold transform hover:scale-105">
+              Start Your Free Trial Now
+            </button>
+            <p className="mt-4 text-gray-600">
+              Join 10,000+ property managers already using RentManager Pro
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black opacity-10"></div>
+        <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Ready to Transform Your Property Management?
+          </h2>
+          <p className="text-xl md:text-2xl text-blue-100 mb-10">
+            Join thousands of property managers who trust RentManager Pro to streamline their operations and grow their business.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="px-10 py-4 bg-white text-blue-600 rounded-xl hover:bg-gray-100 transition shadow-2xl text-lg font-bold transform hover:scale-105">
+              Start Free 30-Day Trial
+            </button>
+            <button className="px-10 py-4 border-2 border-white text-white rounded-xl hover:bg-white hover:text-blue-600 transition text-lg font-bold transform hover:scale-105">
+              Schedule a Demo
+            </button>
+          </div>
+          <p className="mt-6 text-blue-100">
+            ✓ No credit card required  ✓ Cancel anytime  ✓ Full access to all features
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+
+      <Footer />
+      <WhatsAppButton />
     </div>
   );
 }
