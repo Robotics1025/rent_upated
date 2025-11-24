@@ -43,6 +43,15 @@ export default function Hero() {
           </div>
           
           <div className="relative">
+            {/* Dashboard Image */}
+            <div className="bg-white p-4 rounded-xl shadow-lg mb-4">
+              <img 
+                src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&h=400&fit=crop&auto=format"
+                alt="Modern property building"
+                className="w-full h-64 object-cover rounded-lg"
+              />
+            </div>
+            
             <div className="bg-white p-8 rounded-xl shadow-lg">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Dashboard Overview</h3>
