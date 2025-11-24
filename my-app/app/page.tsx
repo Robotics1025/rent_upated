@@ -18,105 +18,80 @@ export default function Home() {
       <Pricing />
       
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-24 px-4 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <section id="how-it-works" className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <div className="inline-block mb-4 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold">
-              📋 HOW IT WORKS
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Get Started in Minutes
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Three simple steps to transform your property management experience
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Three simple steps to transform your property management
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connection Lines */}
-            <div className="hidden md:block absolute top-24 left-1/4 right-1/4 h-1 bg-gradient-to-r from-blue-300 via-purple-300 to-indigo-300"></div>
-            
-            <div className="relative text-center group">
-              <div className="relative inline-block mb-8">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl flex items-center justify-center text-4xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform duration-300">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="inline-block mb-6">
+                <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto">
                   1
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
-                  <span className="text-lg">✨</span>
-                </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Create Account</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Sign up in seconds with your email. No credit card required for the 30-day trial period.
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Create Account</h3>
+              <p className="text-gray-600">
+                Sign up in seconds. No credit card required for the 30-day trial.
               </p>
             </div>
             
-            <div className="relative text-center group">
-              <div className="relative inline-block mb-8">
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl flex items-center justify-center text-4xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform duration-300">
+            <div className="text-center">
+              <div className="inline-block mb-6">
+                <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto">
                   2
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center">
-                  <span className="text-lg">🏢</span>
-                </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Add Properties & Tenants</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Import your property data or add them manually. Invite tenants to join their portal.
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Add Properties & Tenants</h3>
+              <p className="text-gray-600">
+                Import your data or add manually. Invite tenants to their portal.
               </p>
             </div>
             
-            <div className="relative text-center group">
-              <div className="relative inline-block mb-8">
-                <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-2xl flex items-center justify-center text-4xl font-bold mx-auto shadow-xl group-hover:scale-110 transition-transform duration-300">
+            <div className="text-center">
+              <div className="inline-block mb-6">
+                <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto">
                   3
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center">
-                  <span className="text-lg">🚀</span>
-                </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Start Managing</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Automate rent collection, track payments, and manage everything from your dashboard.
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Start Managing</h3>
+              <p className="text-gray-600">
+                Automate rent collection and manage everything from your dashboard.
               </p>
             </div>
           </div>
           
-          <div className="mt-16 text-center">
-            <button className="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition shadow-xl text-lg font-semibold transform hover:scale-105">
-              Start Your Free Trial Now
+          <div className="mt-12 text-center">
+            <button className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              Start Your Free Trial
             </button>
-            <p className="mt-4 text-gray-600">
-              Join 10,000+ property managers already using RentManager Pro
-            </p>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute bottom-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-soft-light filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+      <section className="py-20 px-4 bg-blue-600">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Ready to Transform Your Property Management?
           </h2>
-          <p className="text-xl md:text-2xl text-blue-100 mb-10">
-            Join thousands of property managers who trust RentManager Pro to streamline their operations and grow their business.
+          <p className="text-lg text-blue-100 mb-8">
+            Join thousands of property managers who trust RentManager Pro
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="px-10 py-4 bg-white text-blue-600 rounded-xl hover:bg-gray-100 transition shadow-2xl text-lg font-bold transform hover:scale-105">
-              Start Free 30-Day Trial
+            <button className="px-8 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition font-semibold">
+              Start Free Trial
             </button>
-            <button className="px-10 py-4 border-2 border-white text-white rounded-xl hover:bg-white hover:text-blue-600 transition text-lg font-bold transform hover:scale-105">
+            <button className="px-8 py-3 border-2 border-white text-white rounded-lg hover:bg-white hover:text-blue-600 transition font-semibold">
               Schedule a Demo
             </button>
           </div>
-          <p className="mt-6 text-blue-100">
-            ✓ No credit card required  ✓ Cancel anytime  ✓ Full access to all features
-          </p>
         </div>
       </section>
 
