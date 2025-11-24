@@ -1,0 +1,665 @@
+// RentManager Pro - Database Schema
+// Property Rental & Booking Management Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT & AUTHENTICATION
+// ============================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  TENANT
+  MEMBER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+  PENDING_VERIFICATION
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  firstName     String
+  lastName      String
+  phone         String?
+  phoneVerified Boolean   @default(false)
+  avatar        String?
+  role          UserRole  @default(MEMBER)
+  status        UserStatus @default(PENDING_VERIFICATION)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  
+  // Relations
+  sessions          Session[]
+  authProviders     AuthProvider[]
+  bookings          Booking[]
+  tenancies         Tenancy[]
+  payments          Payment[]
+  notifications     Notification[]
+  adminAssignments  AdminAssignment[]
+  auditLogs         AuditLog[]
+  
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+enum AuthProviderType {
+  GOOGLE
+  FACEBOOK
+  APPLE
+  MICROSOFT
+}
+
+model AuthProvider {
+  id           String            @id @default(cuid())
+  userId       String
+  provider     AuthProviderType
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+  
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  ipAddress    String?
+  userAgent    String?
+  deviceInfo   String?
+  expiresAt    DateTime
+  
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// ============================================
+// PROPERTY MANAGEMENT
+// ============================================
+
+enum PropertyType {
+  APARTMENT_BUILDING
+  HOUSE
+  TOWNHOUSE
+  HOSTEL
+  COMMERCIAL_BUILDING
+  MIXED_USE
+}
+
+enum TenancyType {
+  MONTHLY_RENT
+  LONG_TERM_LEASE
+  SHORT_TERM_STAY
+  DAILY_RENTAL
+  FOR_SALE
+}
+
+enum OwnerType {
+  INDIVIDUAL
+  COMPANY
+  GOVERNMENT
+  TRUST
+}
+
+model Property {
+  id                 String        @id @default(cuid())
+  name               String
+  description        String?       @db.Text
+  propertyType       PropertyType
+  tenancyType        TenancyType
+  
+  // Ownership Details
+  ownerName          String
+  ownerType          OwnerType
+  ownerContact       String?
+  ownerEmail         String?
+  ownerPhone         String?
+  registrationNumber String?
+  
+  // Address
+  addressLine1       String
+  addressLine2       String?
+  city               String
+  district           String?
+  region             String
+  postalCode         String?
+  country            String        @default("Uganda")
+  latitude           Float?
+  longitude          Float?
+  
+  // Status
+  isActive           Boolean       @default(true)
+  isFeatured         Boolean       @default(false)
+  
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  
+  // Relations
+  units              Unit[]
+  files              File[]
+  adminAssignments   AdminAssignment[]
+  
+  @@index([propertyType])
+  @@index([tenancyType])
+  @@index([city])
+  @@index([isActive])
+}
+
+// ============================================
+// UNITS (Rooms/Apartments)
+// ============================================
+
+enum UnitStatus {
+  AVAILABLE
+  BOOKED
+  OCCUPIED
+  MAINTENANCE
+  UNAVAILABLE
+}
+
+model Unit {
+  id              String      @id @default(cuid())
+  propertyId      String
+  unitCode        String
+  name            String?
+  description     String?     @db.Text
+  
+  // Pricing
+  price           Decimal     @db.Decimal(10, 2)
+  currency        String      @default("UGX")
+  deposit         Decimal?    @db.Decimal(10, 2)
+  
+  // Features
+  bedrooms        Int?
+  bathrooms       Int?
+  squareMeters    Float?
+  floor           Int?
+  isFurnished     Boolean     @default(false)
+  hasBalcony      Boolean     @default(false)
+  hasWifi         Boolean     @default(false)
+  hasAC           Boolean     @default(false)
+  hasPet          Boolean     @default(false)
+  hasParking      Boolean     @default(false)
+  
+  // Amenities JSON
+  amenities       Json?
+  
+  status          UnitStatus  @default(AVAILABLE)
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  property        Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  listings        Listing[]
+  bookings        Booking[]
+  tenancies       Tenancy[]
+  files           File[]
+  
+  @@unique([propertyId, unitCode])
+  @@index([propertyId])
+  @@index([status])
+  @@index([price])
+}
+
+// ============================================
+// LISTINGS (Marketplace)
+// ============================================
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  ARCHIVED
+  EXPIRED
+}
+
+enum ListingVisibility {
+  PUBLIC
+  REGISTERED_USERS
+  VERIFIED_USERS
+  PRIVATE
+}
+
+model Listing {
+  id                String             @id @default(cuid())
+  unitId            String
+  title             String
+  description       String             @db.Text
+  highlights        Json?
+  
+  // Pricing Override (optional)
+  customPrice       Decimal?           @db.Decimal(10, 2)
+  customDeposit     Decimal?           @db.Decimal(10, 2)
+  
+  // Availability
+  availableFrom     DateTime?
+  availableTo       DateTime?
+  minimumStay       Int?               // in days
+  maximumStay       Int?               // in days
+  
+  // Settings
+  status            ListingStatus      @default(DRAFT)
+  visibility        ListingVisibility  @default(PUBLIC)
+  isPromoted        Boolean            @default(false)
+  viewCount         Int                @default(0)
+  
+  publishedAt       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  // Relations
+  unit              Unit               @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  bookings          Booking[]
+  
+  @@index([unitId])
+  @@index([status])
+  @@index([visibility])
+  @@index([publishedAt])
+}
+
+// ============================================
+// BOOKINGS
+// ============================================
+
+enum BookingType {
+  SHORT_TERM
+  LONG_TERM
+  INSPECTION
+  VIEWING
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  EXPIRED
+}
+
+model Booking {
+  id              String         @id @default(cuid())
+  bookingNumber   String         @unique
+  listingId       String
+  unitId          String
+  tenantId        String
+  
+  bookingType     BookingType
+  status          BookingStatus  @default(PENDING)
+  
+  // Dates
+  checkInDate     DateTime
+  checkOutDate    DateTime?
+  
+  // Pricing
+  totalAmount     Decimal        @db.Decimal(10, 2)
+  depositAmount   Decimal?       @db.Decimal(10, 2)
+  currency        String         @default("UGX")
+  
+  // Additional Info
+  numberOfGuests  Int?
+  specialRequests String?        @db.Text
+  
+  // Admin Notes
+  adminNotes      String?        @db.Text
+  
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  cancellationReason String?     @db.Text
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  listing         Listing        @relation(fields: [listingId], references: [id])
+  unit            Unit           @relation(fields: [unitId], references: [id])
+  tenant          User           @relation(fields: [tenantId], references: [id])
+  payments        Payment[]
+  tenancy         Tenancy?
+  
+  @@index([bookingNumber])
+  @@index([listingId])
+  @@index([unitId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([checkInDate])
+}
+
+// ============================================
+// TENANCIES
+// ============================================
+
+enum TenancyStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+  PENDING
+}
+
+model Tenancy {
+  id              String         @id @default(cuid())
+  tenancyNumber   String         @unique
+  bookingId       String         @unique
+  unitId          String
+  tenantId        String
+  
+  status          TenancyStatus  @default(PENDING)
+  
+  // Contract Details
+  startDate       DateTime
+  endDate         DateTime?
+  monthlyRent     Decimal        @db.Decimal(10, 2)
+  depositPaid     Decimal        @db.Decimal(10, 2)
+  currency        String         @default("UGX")
+  
+  // Agreement
+  contractUrl     String?
+  termsAccepted   Boolean        @default(false)
+  termsAcceptedAt DateTime?
+  
+  // Status Tracking
+  activatedAt     DateTime?
+  terminatedAt    DateTime?
+  terminationReason String?      @db.Text
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  booking         Booking        @relation(fields: [bookingId], references: [id])
+  unit            Unit           @relation(fields: [unitId], references: [id])
+  tenant          User           @relation(fields: [tenantId], references: [id])
+  
+  @@index([tenancyNumber])
+  @@index([unitId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([startDate])
+}
+
+// ============================================
+// PAYMENTS
+// ============================================
+
+enum PaymentMethod {
+  MOBILE_MONEY
+  BANK_TRANSFER
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  PAYPAL
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentPurpose {
+  BOOKING_DEPOSIT
+  MONTHLY_RENT
+  SECURITY_DEPOSIT
+  UTILITIES
+  MAINTENANCE_FEE
+  LATE_FEE
+  REFUND
+  OTHER
+}
+
+model Payment {
+  id                  String          @id @default(cuid())
+  transactionId       String          @unique
+  bookingId           String?
+  tenantId            String
+  
+  amount              Decimal         @db.Decimal(10, 2)
+  currency            String          @default("UGX")
+  
+  purpose             PaymentPurpose
+  method              PaymentMethod
+  status              PaymentStatus   @default(PENDING)
+  
+  // Provider Details
+  paymentProvider     String?
+  providerTransactionId String?
+  providerResponse    Json?
+  
+  // Metadata
+  description         String?
+  receiptUrl          String?
+  
+  paidAt              DateTime?
+  refundedAt          DateTime?
+  
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  
+  // Relations
+  booking             Booking?        @relation(fields: [bookingId], references: [id])
+  tenant              User            @relation(fields: [tenantId], references: [id])
+  history             PaymentHistory[]
+  
+  @@index([transactionId])
+  @@index([bookingId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum PaymentEventType {
+  CREATED
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUND_INITIATED
+  REFUNDED
+  CANCELLED
+}
+
+model PaymentHistory {
+  id          String            @id @default(cuid())
+  paymentId   String
+  eventType   PaymentEventType
+  status      PaymentStatus
+  metadata    Json?
+  createdAt   DateTime          @default(now())
+  
+  payment     Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  
+  @@index([paymentId])
+  @@index([createdAt])
+}
+
+// ============================================
+// ADMIN ASSIGNMENTS
+// ============================================
+
+model AdminAssignment {
+  id          String    @id @default(cuid())
+  adminId     String
+  propertyId  String
+  role        String    @default("Property Manager")
+  
+  assignedAt  DateTime  @default(now())
+  assignedBy  String?
+  
+  admin       User      @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  
+  @@unique([adminId, propertyId])
+  @@index([adminId])
+  @@index([propertyId])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+enum NotificationType {
+  BOOKING_CONFIRMATION
+  PAYMENT_RECEIPT
+  RENT_REMINDER
+  SYSTEM_ALERT
+  ADMIN_UPDATE
+  MAINTENANCE_NOTICE
+  MESSAGE
+  OTHER
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+model Notification {
+  id          String              @id @default(cuid())
+  userId      String
+  type        NotificationType
+  channel     NotificationChannel @default(IN_APP)
+  status      NotificationStatus  @default(UNREAD)
+  
+  title       String
+  message     String              @db.Text
+  data        Json?
+  
+  readAt      DateTime?
+  sentAt      DateTime?
+  
+  createdAt   DateTime            @default(now())
+  
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// FILES & MEDIA
+// ============================================
+
+enum FileType {
+  IMAGE
+  DOCUMENT
+  VIDEO
+  OTHER
+}
+
+enum FileCategory {
+  PROPERTY_IMAGE
+  UNIT_IMAGE
+  OWNERSHIP_DOCUMENT
+  CONTRACT
+  RECEIPT
+  ID_DOCUMENT
+  OTHER
+}
+
+model File {
+  id          String       @id @default(cuid())
+  propertyId  String?
+  unitId      String?
+  
+  fileName    String
+  fileUrl     String
+  fileType    FileType
+  category    FileCategory
+  mimeType    String?
+  fileSize    Int?
+  
+  description String?
+  
+  uploadedAt  DateTime     @default(now())
+  
+  property    Property?    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit        Unit?        @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  
+  @@index([propertyId])
+  @@index([unitId])
+  @@index([category])
+}
+
+// ============================================
+// AUDIT LOGS
+// ============================================
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  ROLE_CHANGE
+  STATUS_CHANGE
+  PAYMENT
+  BOOKING
+  ASSIGNMENT
+  OTHER
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  userId      String?
+  action      AuditAction
+  entityType  String
+  entityId    String?
+  
+  oldValue    Json?
+  newValue    Json?
+  metadata    Json?
+  
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime    @default(now())
+  
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
+}
