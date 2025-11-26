@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { 
   Building2, LayoutDashboard, Home, Users, FileText, CreditCard, 
-  Settings, LogOut, Menu, X, Search, ChevronDown, User, Camera
+  Settings, LogOut, Menu, X, Search, ChevronDown, User, Camera, BarChart3
 } from 'lucide-react'
 import NotificationBell from './NotificationBell'
 
@@ -17,6 +17,8 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session } = useSession()
   const userRole = session?.user?.role || 'TENANT'
+  const userAvatar = session?.user?.image || session?.user?.avatar
+  const userName = session?.user?.name || `${session?.user?.firstName || ''} ${session?.user?.lastName || ''}`.trim() || 'User'
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [profileOpen, setProfileOpen] = useState(false)
   const pathname = usePathname()
@@ -35,6 +37,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: 'Bookings', href: '/dashboard/bookings', icon: FileText, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
     { name: 'Users', href: '/dashboard/users', icon: Users, roles: ['SUPER_ADMIN', 'ADMIN'] },
     { name: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
   ]
 
@@ -86,9 +89,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* User Profile */}
         <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 cursor-pointer relative group">
-            {session?.user?.avatar ? (
+            {userAvatar ? (
               <img
-                src={session.user.avatar}
+                src={userAvatar}
                 alt="Profile"
                 className="h-10 w-10 rounded-full object-cover"
               />
@@ -98,7 +101,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{session?.user?.name || 'User'}</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
               <p className="text-xs text-gray-500 truncate">{userRole.replace('_', ' ')}</p>
             </div>
           </div>
@@ -140,9 +143,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg"
                 >
-                  {session?.user?.avatar ? (
+                  {userAvatar ? (
                     <img
-                      src={session.user.avatar}
+                      src={userAvatar}
                       alt="Profile"
                       className="h-8 w-8 rounded-full object-cover"
                     />

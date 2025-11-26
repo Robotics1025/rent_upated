@@ -24,11 +24,12 @@ export async function POST(request: NextRequest) {
         bookingId: body.bookingId || null,
         amount: body.amount,
         currency: 'UGX',
-        purpose: body.purpose,
-        method: body.method,
+        purpose: body.paymentPurpose || body.purpose,
+        method: body.paymentMethod || body.method,
         status: 'SUCCESS',
         description: body.description,
-        paidAt: new Date(),
+        paymentMonth: body.paymentMonth || null,
+        paidAt: body.paymentDate ? new Date(body.paymentDate) : new Date(),
       },
       include: {
         tenant: {
@@ -66,6 +67,66 @@ export async function POST(request: NextRequest) {
 
     // Send notification to tenant
     await notifyPaymentReceived(body.tenantId, body.amount, transactionId)
+
+    // Auto-update unit status and create tenancy if needed
+    if (body.bookingId) {
+      const booking = await prisma.booking.findUnique({
+        where: { id: body.bookingId },
+        include: {
+          unit: true,
+          tenancy: true,
+        },
+      })
+
+      if (booking && booking.unit) {
+        // Check if this is the first payment
+        const paymentCount = await prisma.payment.count({
+          where: { bookingId: body.bookingId },
+        })
+
+        // If first payment and no tenancy exists, create one
+        if (paymentCount === 1 && !booking.tenancy) {
+          const isDeposit = body.purpose === 'DEPOSIT' || body.paymentPurpose === 'DEPOSIT'
+          
+          await prisma.tenancy.create({
+            data: {
+              tenantId: body.tenantId,
+              unitId: booking.unitId,
+              bookingId: booking.id,
+              startDate: new Date(),
+              status: 'ACTIVE',
+              monthlyRent: booking.unit.price,
+              depositPaid: isDeposit ? body.amount : 0,
+            },
+          })
+
+          // Update unit to occupied
+          await prisma.unit.update({
+            where: { id: booking.unitId },
+            data: { status: 'OCCUPIED' },
+          })
+
+          // Notify tenant
+          await prisma.notification.create({
+            data: {
+              userId: body.tenantId,
+              type: 'SYSTEM_ALERT',
+              title: 'Unit Occupied',
+              message: `Your unit ${booking.unit.unitCode} is now marked as occupied. Welcome!`,
+              relatedId: booking.unitId,
+              relatedType: 'UNIT',
+              status: 'UNREAD',
+            },
+          })
+        } else if (paymentCount >= 1 && booking.unit.status !== 'OCCUPIED') {
+          // Ensure unit is marked as occupied if payments are being made
+          await prisma.unit.update({
+            where: { id: booking.unitId },
+            data: { status: 'OCCUPIED' },
+          })
+        }
+      }
+    }
 
     return NextResponse.json(payment, { status: 201 })
   } catch (error) {

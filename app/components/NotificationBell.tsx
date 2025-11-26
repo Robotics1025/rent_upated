@@ -36,6 +36,9 @@ export default function NotificationBell() {
       if (res.ok) {
         const data = await res.json()
         setNotifications(data)
+      } else if (res.status === 401) {
+        // User not authenticated, don't show error
+        setNotifications([])
       }
     } catch (error) {
       console.error('Error fetching notifications:', error)

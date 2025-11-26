@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { prisma } from '@/lib/prisma'
+import { notifyUnitAdded } from '@/lib/notifications'
 
 export async function GET(
   request: NextRequest,
@@ -14,6 +17,31 @@ export async function GET(
         property: true,
         files: {
           where: { category: 'UNIT_IMAGE' },
+        },
+        tenancies: {
+          where: { status: 'ACTIVE' },
+          include: {
+            tenant: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+              },
+            },
+            booking: {
+              select: {
+                id: true,
+                payments: {
+                  where: { purpose: 'MONTHLY_RENT' },
+                  orderBy: { createdAt: 'desc' },
+                },
+              },
+            },
+          },
+          orderBy: { startDate: 'desc' },
+          take: 1,
         },
       },
     })
@@ -40,11 +68,63 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
 
+    // Get unit details before deletion for notification
+    const unit = await prisma.unit.findUnique({
+      where: { id },
+      include: {
+        property: {
+          include: {
+            adminAssignments: true,
+          },
+        },
+      },
+    })
+
+    if (!unit) {
+      return NextResponse.json({ error: 'Unit not found' }, { status: 404 })
+    }
+
+    // Delete the unit
     await prisma.unit.delete({
       where: { id },
     })
+
+    // Send notification to the user who deleted the unit
+    await prisma.notification.create({
+      data: {
+        userId: session.user.id,
+        type: 'SYSTEM_ALERT',
+        channel: 'IN_APP',
+        status: 'UNREAD',
+        title: 'Unit Deleted Successfully 🗑️',
+        message: `Unit ${unit.unitCode} has been deleted from ${unit.property.name}.`,
+        data: { unitCode: unit.unitCode, propertyName: unit.property.name },
+      },
+    })
+
+    // Send notifications to assigned managers
+    if (unit.property.adminAssignments) {
+      for (const assignment of unit.property.adminAssignments) {
+        await prisma.notification.create({
+          data: {
+            userId: assignment.adminId,
+            type: 'SYSTEM_ALERT',
+            channel: 'IN_APP',
+            status: 'UNREAD',
+            title: 'Unit Deleted 🗑️',
+            message: `Unit ${unit.unitCode} has been deleted from ${unit.property.name}.`,
+            data: { unitCode: unit.unitCode, propertyName: unit.property.name },
+          },
+        })
+      }
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -61,6 +141,11 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
     const body = await request.json()
 
@@ -87,10 +172,34 @@ export async function PATCH(
         status: body.status,
       },
       include: {
-        property: true,
+        property: {
+          include: {
+            adminAssignments: true,
+          },
+        },
         files: true,
       },
     })
+
+    // Send notification to the user who updated the unit
+    await prisma.notification.create({
+      data: {
+        userId: session.user.id,
+        type: 'SYSTEM_ALERT',
+        channel: 'IN_APP',
+        status: 'UNREAD',
+        title: 'Unit Updated Successfully ✅',
+        message: `Unit ${unit.unitCode} in ${unit.property.name} has been updated.`,
+        data: { unitCode: unit.unitCode, propertyName: unit.property.name },
+      },
+    })
+
+    // Send notifications to assigned managers
+    if (unit.property.adminAssignments) {
+      for (const assignment of unit.property.adminAssignments) {
+        await notifyUnitAdded(assignment.adminId, unit.unitCode, unit.property.name)
+      }
+    }
 
     return NextResponse.json(unit)
   } catch (error) {

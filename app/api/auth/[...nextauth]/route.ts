@@ -8,6 +8,9 @@ import bcrypt from "bcryptjs"
 declare module "next-auth" {
   interface User {
     role?: string
+    avatar?: string
+    firstName?: string
+    lastName?: string
   }
   interface Session {
     user: {
@@ -15,6 +18,10 @@ declare module "next-auth" {
       email: string
       name: string
       role: string
+      avatar?: string
+      image?: string
+      firstName?: string
+      lastName?: string
     }
   }
 }
@@ -23,6 +30,9 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?: string
     id?: string
+    avatar?: string
+    firstName?: string
+    lastName?: string
   }
 }
 
@@ -62,6 +72,9 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: `${user.firstName} ${user.lastName}`,
           role: user.role,
+          avatar: user.avatar,
+          firstName: user.firstName,
+          lastName: user.lastName,
         }
       }
     })
@@ -101,15 +114,33 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role
         token.id = user.id
+        token.avatar = user.avatar
+        token.firstName = user.firstName
+        token.lastName = user.lastName
       } else if (account?.provider === "google" && token.email) {
-        // Fetch user role from database for Google users
+        // Fetch user data from database for Google users
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
-          select: { id: true, role: true }
+          select: { id: true, role: true, avatar: true, firstName: true, lastName: true }
         })
         if (dbUser) {
           token.role = dbUser.role
           token.id = dbUser.id
+          token.avatar = dbUser.avatar
+          token.firstName = dbUser.firstName
+          token.lastName = dbUser.lastName
+        }
+      } else if (token.id && token.email) {
+        // Refresh user data on each request to keep avatar updated
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { avatar: true, firstName: true, lastName: true, role: true }
+        })
+        if (dbUser) {
+          token.avatar = dbUser.avatar
+          token.firstName = dbUser.firstName
+          token.lastName = dbUser.lastName
+          token.role = dbUser.role
         }
       }
       return token
@@ -118,6 +149,10 @@ export const authOptions: NextAuthOptions = {
       if (session?.user) {
         session.user.role = token.role as string
         session.user.id = token.id as string
+        session.user.avatar = token.avatar as string
+        session.user.image = token.avatar as string
+        session.user.firstName = token.firstName as string
+        session.user.lastName = token.lastName as string
       }
       return session
     },

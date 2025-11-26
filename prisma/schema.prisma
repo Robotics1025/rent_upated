@@ -456,6 +456,9 @@ model Payment {
   method              PaymentMethod
   status              PaymentStatus   @default(PENDING)
   
+  // Payment Period (for rent tracking)
+  paymentMonth        String?         // Format: "2025-01" for January 2025
+  
   // Provider Details
   paymentProvider     String?
   providerTransactionId String?

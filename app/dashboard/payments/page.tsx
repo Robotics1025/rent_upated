@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import DashboardLayout from '@/app/components/DashboardLayout'
-import { DollarSign, Search, Filter, Download, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { DollarSign, Search, Filter, Download, CheckCircle, XCircle, Clock, Plus, X } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Payment {
   id: string
@@ -24,15 +25,50 @@ interface Payment {
   createdAt: string
 }
 
+interface Tenant {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+}
+
+interface Booking {
+  id: string
+  bookingNumber: string
+  unit: {
+    unitCode: string
+  }
+}
+
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false)
+  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [selectedTenant, setSelectedTenant] = useState('')
+  const [paymentForm, setPaymentForm] = useState({
+    tenantId: '',
+    bookingId: '',
+    amount: '',
+    paymentMonth: '',
+    paymentDate: new Date().toISOString().split('T')[0],
+    paymentMethod: 'CASH',
+    purpose: 'RENT',
+  })
 
   useEffect(() => {
     fetchPayments()
+    fetchTenants()
   }, [])
+
+  useEffect(() => {
+    if (selectedTenant) {
+      fetchBookings(selectedTenant)
+    }
+  }, [selectedTenant])
 
   const fetchPayments = async () => {
     try {
@@ -43,6 +79,66 @@ export default function PaymentsPage() {
       console.error('Error fetching payments:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTenants = async () => {
+    try {
+      const res = await fetch('/api/tenants')
+      const data = await res.json()
+      setTenants(data)
+    } catch (error) {
+      console.error('Error fetching tenants:', error)
+    }
+  }
+
+  const fetchBookings = async (tenantId: string) => {
+    try {
+      const res = await fetch(`/api/bookings?tenantId=${tenantId}`)
+      const data = await res.json()
+      setBookings(data)
+    } catch (error) {
+      console.error('Error fetching bookings:', error)
+    }
+  }
+
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const res = await fetch('/api/payments/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentForm),
+      })
+
+      if (!res.ok) throw new Error('Failed to record payment')
+
+      toast.success('Payment recorded successfully!')
+      setShowPaymentDialog(false)
+      setPaymentForm({
+        tenantId: '',
+        bookingId: '',
+        amount: '',
+        paymentMonth: '',
+        paymentDate: new Date().toISOString().split('T')[0],
+        paymentMethod: 'CASH',
+        purpose: 'RENT',
+      })
+      setSelectedTenant('')
+      fetchPayments()
+    } catch (error) {
+      console.error('Error recording payment:', error)
+      toast.error('Failed to record payment')
+    }
+  }
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setPaymentForm(prev => ({ ...prev, [name]: value }))
+    
+    if (name === 'tenantId') {
+      setSelectedTenant(value)
+      setPaymentForm(prev => ({ ...prev, bookingId: '' }))
     }
   }
 
@@ -70,9 +166,18 @@ export default function PaymentsPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
-          <p className="text-gray-600 mt-1">Track and manage all transactions</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
+            <p className="text-gray-600 mt-1">Track and manage all transactions</p>
+          </div>
+          <button
+            onClick={() => setShowPaymentDialog(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Record Payment
+          </button>
         </div>
 
         {/* Stats */}
@@ -205,6 +310,167 @@ export default function PaymentsPage() {
             </div>
           )}
         </div>
+
+        {/* Manual Payment Dialog */}
+        {showPaymentDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-gray-900">Record Manual Payment</h2>
+                  <button
+                    onClick={() => setShowPaymentDialog(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handlePaymentSubmit} className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Tenant *
+                    </label>
+                    <select
+                      name="tenantId"
+                      value={paymentForm.tenantId}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">Choose a tenant...</option>
+                      {tenants.map((tenant) => (
+                        <option key={tenant.id} value={tenant.id}>
+                          {tenant.firstName} {tenant.lastName} - {tenant.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedTenant && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Booking (Optional)
+                      </label>
+                      <select
+                        name="bookingId"
+                        value={paymentForm.bookingId}
+                        onChange={handleFormChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
+                        <option value="">No booking (general payment)</option>
+                        {bookings.map((booking) => (
+                          <option key={booking.id} value={booking.id}>
+                            {booking.bookingNumber} - {booking.unit.unitCode}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Payment Purpose *
+                    </label>
+                    <select
+                      name="purpose"
+                      value={paymentForm.purpose}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="RENT">Monthly Rent</option>
+                      <option value="DEPOSIT">Security Deposit</option>
+                      <option value="UTILITIES">Utilities</option>
+                      <option value="MAINTENANCE">Maintenance</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Amount (UGX) *
+                    </label>
+                    <input
+                      type="number"
+                      name="amount"
+                      value={paymentForm.amount}
+                      onChange={handleFormChange}
+                      required
+                      min="0"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Payment Month (Optional)
+                    </label>
+                    <input
+                      type="month"
+                      name="paymentMonth"
+                      value={paymentForm.paymentMonth}
+                      onChange={handleFormChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Payment Date *
+                    </label>
+                    <input
+                      type="date"
+                      name="paymentDate"
+                      value={paymentForm.paymentDate}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Payment Method *
+                    </label>
+                    <select
+                      name="paymentMethod"
+                      value={paymentForm.paymentMethod}
+                      onChange={handleFormChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="CASH">Cash</option>
+                      <option value="MOBILE_MONEY">Mobile Money</option>
+                      <option value="BANK_TRANSFER">Bank Transfer</option>
+                      <option value="CREDIT_CARD">Credit Card</option>
+                      <option value="DEBIT_CARD">Debit Card</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentDialog(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    Record Payment
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )
