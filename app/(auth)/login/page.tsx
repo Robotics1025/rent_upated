@@ -19,13 +19,23 @@ export default function LoginPage() {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
     
-    // TODO: Implement credential authentication
-    console.log({ email, password })
-    
-    setTimeout(() => {
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError('Invalid email or password')
+        setLoading(false)
+      } else {
+        window.location.href = '/dashboard'
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again.')
       setLoading(false)
-      window.location.href = '/dashboard'
-    }, 1500)
+    }
   }
 
   const handleGoogleSignIn = async () => {

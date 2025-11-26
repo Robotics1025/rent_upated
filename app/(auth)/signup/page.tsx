@@ -18,23 +18,44 @@ export default function SignupPage() {
     setError('')
     
     const formData = new FormData(e.currentTarget)
+    const password = formData.get('password') as string
+    const confirmPassword = formData.get('confirmPassword') as string
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
+    }
+    
     const data = {
       firstName: formData.get('firstName'),
       lastName: formData.get('lastName'),
       email: formData.get('email'),
       phone: formData.get('phone'),
-      password: formData.get('password'),
-      confirmPassword: formData.get('confirmPassword'),
-      role: role
+      password,
+      role
     }
     
-    // TODO: Implement registration logic
-    console.log(data)
-    
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        setError(result.error || 'Failed to create account')
+        setLoading(false)
+      } else {
+        // Redirect to login
+        window.location.href = '/login?registered=true'
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again.')
       setLoading(false)
-      window.location.href = '/login'
-    }, 1500)
+    }
   }
 
   const handleGoogleSignIn = async () => {
