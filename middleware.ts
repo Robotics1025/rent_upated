@@ -12,21 +12,43 @@ export default withAuth(
         return NextResponse.redirect(new URL('/login', req.url))
       }
 
+      // Redirect users to their role-specific dashboard
+      if (path === '/dashboard') {
+        if (token.role === 'MANAGER') {
+          return NextResponse.redirect(new URL('/dashboard/manager', req.url))
+        } else if (token.role === 'MEMBER') {
+          return NextResponse.redirect(new URL('/dashboard/tenant', req.url))
+        }
+        // ADMIN and SUPER_ADMIN stay on /dashboard
+      }
+
+      // Protect role-specific dashboards
+      if (path.startsWith('/dashboard/manager') && token.role !== 'MANAGER') {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      }
+
+      if (path.startsWith('/dashboard/tenant')) {
+        if (token.role !== 'MEMBER') {
+          return NextResponse.redirect(new URL('/dashboard', req.url))
+        }
+      }
+
       // Admin-only routes
       const adminRoutes = ['/dashboard/users']
       if (adminRoutes.some(route => path.startsWith(route))) {
         if (token.role !== 'ADMIN' && token.role !== 'SUPER_ADMIN') {
-          return NextResponse.redirect(new URL('/dashboard', req.url))
+          const defaultPath = token.role === 'MANAGER' ? '/dashboard/manager' : '/dashboard/tenant'
+          return NextResponse.redirect(new URL(defaultPath, req.url))
         }
       }
 
       // Manager and Admin routes (properties, units, bookings, payments)
       const managerRoutes = ['/dashboard/properties', '/dashboard/units', '/dashboard/bookings', '/dashboard/payments']
       if (managerRoutes.some(route => path.startsWith(route))) {
-        if (token.role === 'TENANT' || token.role === 'MEMBER') {
-          return NextResponse.redirect(new URL('/dashboard', req.url))
+        if (token.role === 'MEMBER') {
+          return NextResponse.redirect(new URL('/dashboard/tenant', req.url))
         }
-        // ADMIN and SUPER_ADMIN can access all manager routes
+        // ADMIN, SUPER_ADMIN, and MANAGER can access these routes
       }
     }
 

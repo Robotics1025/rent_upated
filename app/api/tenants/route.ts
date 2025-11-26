@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   try {
     const tenants = await prisma.user.findMany({
-      where: { role: 'TENANT' },
+      where: { role: 'MEMBER' },
       select: {
         id: true,
         firstName: true,

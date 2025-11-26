@@ -21,14 +21,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const pathname = usePathname()
 
+  // Each role gets their own dashboard route
+  const getDashboardHref = () => {
+    if (userRole === 'MANAGER') return '/dashboard/manager'
+    if (userRole === 'MEMBER') return '/dashboard/tenant'
+    return '/dashboard' // ADMIN and SUPER_ADMIN
+  }
+
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'ADMIN', 'TENANT'] },
-    { name: 'Properties', href: '/dashboard/properties', icon: Building2, roles: ['SUPER_ADMIN', 'ADMIN'] },
-    { name: 'Units', href: '/dashboard/units', icon: Home, roles: ['SUPER_ADMIN', 'ADMIN'] },
-    { name: 'Bookings', href: '/dashboard/bookings', icon: FileText, roles: ['SUPER_ADMIN', 'ADMIN', 'TENANT'] },
+    { name: 'Dashboard', href: getDashboardHref(), icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Properties', href: '/dashboard/properties', icon: Building2, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
+    { name: 'Units', href: '/dashboard/units', icon: Home, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
+    { name: 'Bookings', href: '/dashboard/bookings', icon: FileText, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
     { name: 'Users', href: '/dashboard/users', icon: Users, roles: ['SUPER_ADMIN', 'ADMIN'] },
-    { name: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['SUPER_ADMIN', 'ADMIN', 'TENANT'] },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN', 'TENANT'] },
+    { name: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
   ]
 
   const filteredNavigation = navigation.filter(item => item.roles.includes(userRole))

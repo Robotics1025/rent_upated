@@ -10,7 +10,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [role, setRole] = useState<'TENANT' | 'ADMIN'>('TENANT')
+  const [role, setRole] = useState<'MEMBER' | 'MANAGER'>('MEMBER')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -92,27 +92,27 @@ export default function SignupPage() {
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => setRole('TENANT')}
+                onClick={() => setRole('MEMBER')}
                 className={`p-4 border-2 rounded-lg text-left transition ${
-                  role === 'TENANT'
+                  role === 'MEMBER'
                     ? 'border-emerald-600 bg-emerald-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="font-semibold text-gray-900">Tenant</div>
+                <div className="font-semibold text-gray-900">Member</div>
                 <div className="text-sm text-gray-600 mt-1">Find and book properties</div>
               </button>
               <button
                 type="button"
-                onClick={() => setRole('ADMIN')}
+                onClick={() => setRole('MANAGER')}
                 className={`p-4 border-2 rounded-lg text-left transition ${
-                  role === 'ADMIN'
+                  role === 'MANAGER'
                     ? 'border-emerald-600 bg-emerald-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <div className="font-semibold text-gray-900">Property Manager</div>
-                <div className="text-sm text-gray-600 mt-1">Manage properties & tenants</div>
+                <div className="text-sm text-gray-600 mt-1">Manage properties & members</div>
               </button>
             </div>
           </div>

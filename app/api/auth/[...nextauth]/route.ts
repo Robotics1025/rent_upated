@@ -83,7 +83,7 @@ export const authOptions: NextAuthOptions = {
                 firstName: nameParts[0] || 'User',
                 lastName: nameParts.slice(1).join(' ') || '',
                 password: '', // Google users don't have password
-                role: 'TENANT',
+                role: 'MEMBER',
                 status: 'ACTIVE',
                 emailVerified: new Date(),
               }

@@ -32,8 +32,8 @@ export default function PropertiesPage() {
 
   // Only managers and admins can access this page
   useEffect(() => {
-    if (session?.user?.role === 'TENANT' || session?.user?.role === 'MEMBER') {
-      router.push('/dashboard')
+    if (session?.user?.role === 'MEMBER') {
+      router.push('/dashboard/tenant')
     }
   }, [session, router])
 

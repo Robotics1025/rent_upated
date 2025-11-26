@@ -37,7 +37,7 @@ export async function POST(req: Request) {
         firstName,
         lastName,
         phone: phone || null,
-        role: role || 'TENANT',
+        role: role || 'MEMBER',
         status: 'ACTIVE',
       }
     })

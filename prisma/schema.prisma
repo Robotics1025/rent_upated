@@ -19,7 +19,7 @@ datasource db {
 enum UserRole {
   SUPER_ADMIN
   ADMIN
-  TENANT
+  MANAGER
   MEMBER
 }
 
