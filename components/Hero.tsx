@@ -54,7 +54,7 @@ export default function Hero() {
             {/* Featured Property Image */}
             <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20 shadow-2xl">
               <img 
-                src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=700&h=500&fit=crop&auto=format&q=80"
+                src="https://images.unsplash.com/photo-1692455151728-85b49a956d45?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 alt="Featured property"
                 className="w-full h-96 object-cover rounded-xl"
               />

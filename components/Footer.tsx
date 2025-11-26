@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Footer() {
   return (
     <footer className="bg-linear-to-br from-gray-900 via-gray-900 to-gray-800 text-white">
@@ -76,7 +78,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">Contact Us</a></li>
               <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">FAQs</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">Get Started</a></li>
+              <li><Link href="/signup" className="text-gray-400 hover:text-emerald-400 transition">Get Started</Link></li>
               <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">Help Center</a></li>
               <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">Property Listing</a></li>
               <li><a href="#" className="text-gray-400 hover:text-emerald-400 transition">Customer Care</a></li>

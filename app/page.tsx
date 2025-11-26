@@ -1,14 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import Features from "./components/Features";
-import Spaces from "./components/Spaces";
-import Stats from "./components/Stats";
-import Testimonials from "./components/Testimonials";
-import Pricing from "./components/Pricing";
-import Footer from "./components/Footer";
-import WhatsAppButton from "./components/WhatsAppButton";
+import Navbar from "../components/Navbar";
+import Hero from "../components/Hero";
+import Features from "../components/Features";
+import Spaces from "../components/Spaces";
+import Stats from "../components/Stats";
+import Testimonials from "../components/Testimonials";
+import Pricing from "../components/Pricing";
+import Footer from "../components/Footer";
+import WhatsAppButton from "../components/WhatsAppButton";
 
 export default function Home() {
   return (
