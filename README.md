@@ -61,18 +61,37 @@ cd rent_upated
 npm install
 
 # Set up environment variables
-cp .env.example .env
-# Edit .env with your database and API keys
+cp .env.template .env
+# Edit .env with your database URL and API keys
 
-# Initialize database
-npx prisma generate
-npx prisma migrate dev --name init
+# Initialize database (choose your hosting provider first)
+# See DATABASE_SETUP.md for detailed instructions
+npm run setup-db
 
 # Run development server
 npm run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 🗄️ Database Setup
+
+For detailed database setup instructions with hosted providers (Vercel Postgres, Supabase, Neon, Railway), see **[DATABASE_SETUP.md](./DATABASE_SETUP.md)**.
+
+### Quick Database Setup
+
+1. **Choose a hosting provider** (recommended: Vercel Postgres for Vercel deployments)
+2. **Get your DATABASE_URL** from the provider
+3. **Update your `.env` file** with the connection string
+4. **Run the setup script**: `npm run setup-db`
+
+The setup script will:
+- Install dependencies
+- Generate Prisma client
+- Push schema to database
+- Seed with sample data
 
 ---
 
@@ -99,6 +118,7 @@ rent_upated/
 
 ## 📚 Documentation
 
+- **[Database Setup](./DATABASE_SETUP.md)** - Complete database setup guide for hosted providers
 - **[Database Schema](./docs/database/DATABASE_SCHEMA.md)** - Complete database documentation
 - **[API Routes](./docs/api/API_ROUTES.md)** - API endpoints reference
 - **[System Architecture](./docs/SYSTEM_ARCHITECTURE.md)** - Architecture overview
@@ -130,11 +150,17 @@ rent_upated/
 
 ## 🔐 Environment Variables
 
-Create a `.env` file:
+Create a `.env` file from the template:
+
+```bash
+cp .env.template .env
+```
+
+Required variables:
 
 ```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/rentmanager"
+# Database (get from your hosting provider)
+DATABASE_URL="postgresql://user:password@host:5432/database"
 
 # Authentication
 NEXTAUTH_SECRET="your-secret-key"
@@ -190,9 +216,12 @@ npm run build
 npm start
 
 # Database operations
-npx prisma studio         # Open database GUI
-npx prisma migrate dev    # Create migration
-npx prisma generate       # Generate Prisma Client
+npm run setup-db         # Complete database setup (install, generate, push, seed)
+npm run db:generate      # Generate Prisma Client
+npm run db:push          # Push schema to database
+npm run db:migrate       # Create and run migrations
+npm run db:studio        # Open database GUI
+npm run db:seed          # Seed database with sample data
 
 # Deploy to Vercel
 vercel                    # Deploy preview
