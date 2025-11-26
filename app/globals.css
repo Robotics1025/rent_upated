@@ -1,20 +1,20 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Professional Color Palette - Blue & Slate */
-  --primary: #2563eb;
+  /* Professional Color Palette - Emerald & Teal */
+  --primary: #10b981;
   --primary-foreground: #ffffff;
-  --primary-hover: #1d4ed8;
-  --primary-light: #3b82f6;
+  --primary-hover: #059669;
+  --primary-light: #34d399;
   --secondary: #64748b;
   --secondary-foreground: #ffffff;
   --secondary-hover: #475569;
-  --accent: #0ea5e9;
+  --accent: #14b8a6;
   --accent-foreground: #ffffff;
-  --accent-hover: #0284c7;
+  --accent-hover: #0d9488;
   
   /* Neutral Colors */
   --background: 0 0% 100%;
@@ -31,7 +31,7 @@
   /* Border & Input */
   --border: 214 32% 91%;
   --input: 214 32% 91%;
-  --ring: 221 83% 53%;
+  --ring: 160 84% 39%;
   
   /* Status Colors */
   --success: #10b981;
@@ -157,11 +157,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Custom gradient backgrounds */
 .gradient-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .gradient-blue {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
 }
 
 .gradient-green {
@@ -172,7 +172,7 @@ h1, h2, h3, h4, h5, h6 {
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 /* Custom scrollbar */
@@ -229,22 +229,22 @@ input:focus, textarea:focus, select:focus {
   --card-foreground: 210 40% 98%;
   --popover: 222 47% 15%;
   --popover-foreground: 210 40% 98%;
-  --primary: #3b82f6;
+  --primary: #10b981;
   --primary-foreground: #ffffff;
-  --primary-hover: #2563eb;
+  --primary-hover: #059669;
   --secondary: #475569;
   --secondary-foreground: #ffffff;
   --secondary-hover: #64748b;
   --muted: 217 33% 17%;
   --muted-foreground: 215 20% 65%;
-  --accent: #0ea5e9;
+  --accent: #14b8a6;
   --accent-foreground: #ffffff;
   --border: 217 33% 24%;
   --input: 217 33% 24%;
-  --ring: 224 76% 48%;
+  --ring: 160 84% 39%;
   --sidebar: 222 47% 15%;
   --sidebar-foreground: 210 40% 98%;
-  --sidebar-primary: #3b82f6;
+  --sidebar-primary: #10b981;
   --sidebar-accent: 217 33% 24%;
 }
 

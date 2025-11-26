@@ -21,14 +21,14 @@ export function SignupForm({
           <form className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-                  <svg className="h-6 w-6 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-linear-to-br from-emerald-600 to-teal-600 shadow-lg">
+                  <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                 </div>
                 <h1 className="text-2xl font-bold">Create an account</h1>
                 <p className="text-balance text-muted-foreground">
-                  Sign up for RentManager Pro
+                  Join EazyRent to manage properties or find your perfect rental
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -68,7 +68,7 @@ export function SignupForm({
                 <Label htmlFor="confirmPassword">Confirm password</Label>
                 <Input id="confirmPassword" type="password" required />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
                 Create account
               </Button>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
@@ -109,8 +109,8 @@ export function SignupForm({
           </form>
           <div className="relative hidden md:block overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop&auto=format&q=80"
-              alt="Modern Apartment Building"
+              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop&auto=format&q=80"
+              alt="Modern Interior Design"
               className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />
           </div>
