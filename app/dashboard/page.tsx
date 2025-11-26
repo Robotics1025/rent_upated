@@ -1,3 +1,5 @@
+'use client'
+
 import DashboardLayout from '@/app/components/DashboardLayout'
 import { Building2, Users, FileText, DollarSign, TrendingUp, TrendingDown, Home, Calendar } from 'lucide-react'
 
@@ -115,19 +117,25 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white">
             <Building2 className="h-10 w-10 mb-4 opacity-80" />
-            <h3 className="text-lg font-semibold mb-2">Add New Property</h3>
-            <p className="text-emerald-100 text-sm mb-4">List a new property with units</p>
-            <button className="bg-white text-emerald-600 px-4 py-2 rounded-lg font-medium hover:bg-emerald-50 transition">
-              Add Property
+            <h3 className="text-lg font-semibold mb-2">View Properties</h3>
+            <p className="text-emerald-100 text-sm mb-4">Manage all properties and units</p>
+            <button 
+              onClick={() => window.location.href = '/dashboard/properties'}
+              className="bg-white text-emerald-600 px-4 py-2 rounded-lg font-medium hover:bg-emerald-50 transition"
+            >
+              View Properties
             </button>
           </div>
 
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
             <Home className="h-10 w-10 mb-4 opacity-80" />
-            <h3 className="text-lg font-semibold mb-2">Add New Unit</h3>
-            <p className="text-blue-100 text-sm mb-4">Create rentable units</p>
-            <button className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition">
-              Add Unit
+            <h3 className="text-lg font-semibold mb-2">View Units</h3>
+            <p className="text-blue-100 text-sm mb-4">Manage all rentable units</p>
+            <button 
+              onClick={() => window.location.href = '/dashboard/units'}
+              className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition"
+            >
+              View Units
             </button>
           </div>
 
@@ -135,7 +143,10 @@ export default function AdminDashboard() {
             <Users className="h-10 w-10 mb-4 opacity-80" />
             <h3 className="text-lg font-semibold mb-2">Manage Users</h3>
             <p className="text-purple-100 text-sm mb-4">View and manage all users</p>
-            <button className="bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-50 transition">
+            <button 
+              onClick={() => window.location.href = '/dashboard/users'}
+              className="bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-50 transition"
+            >
               View Users
             </button>
           </div>

@@ -4,6 +4,28 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
+// Extend NextAuth types
+declare module "next-auth" {
+  interface User {
+    role?: string
+  }
+  interface Session {
+    user: {
+      id: string
+      email: string
+      name: string
+      role: string
+    }
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    role?: string
+    id?: string
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -54,11 +76,12 @@ export const authOptions: NextAuthOptions = {
 
           if (!existingUser) {
             // Create new user from Google
+            const nameParts = user.name?.split(' ') || ['User', '']
             await prisma.user.create({
               data: {
                 email: user.email!,
-                firstName: profile?.given_name || user.name?.split(' ')[0] || 'User',
-                lastName: profile?.family_name || user.name?.split(' ')[1] || '',
+                firstName: nameParts[0] || 'User',
+                lastName: nameParts.slice(1).join(' ') || '',
                 password: '', // Google users don't have password
                 role: 'TENANT',
                 status: 'ACTIVE',
@@ -74,10 +97,20 @@ export const authOptions: NextAuthOptions = {
       }
       return true
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.role = user.role
         token.id = user.id
+      } else if (account?.provider === "google" && token.email) {
+        // Fetch user role from database for Google users
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: { id: true, role: true }
+        })
+        if (dbUser) {
+          token.role = dbUser.role
+          token.id = dbUser.id
+        }
       }
       return token
     },

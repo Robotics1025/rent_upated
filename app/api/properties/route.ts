@@ -7,12 +7,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const city = searchParams.get('city')
     const propertyType = searchParams.get('type')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = parseInt(searchParams.get('limit') || '100')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    const where: any = {
-      isActive: true,
-    }
+    const where: any = {}
 
     if (city) {
       where.city = city
@@ -26,7 +24,6 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         units: {
-          where: { status: 'AVAILABLE' },
           select: {
             id: true,
             unitCode: true,
@@ -34,6 +31,14 @@ export async function GET(request: NextRequest) {
             bedrooms: true,
             bathrooms: true,
             status: true,
+          },
+        },
+        files: {
+          where: { category: 'PROPERTY_IMAGE' },
+          select: {
+            id: true,
+            fileUrl: true,
+            category: true,
           },
         },
         _count: {
@@ -45,17 +50,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    const totalCount = await prisma.property.count({ where })
-
-    return NextResponse.json({
-      properties,
-      pagination: {
-        total: totalCount,
-        limit,
-        offset,
-        hasMore: offset + limit < totalCount,
-      },
-    })
+    return NextResponse.json(properties)
   } catch (error) {
     console.error('Error fetching properties:', error)
     return NextResponse.json(
