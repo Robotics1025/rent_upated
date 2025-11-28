@@ -565,18 +565,21 @@ model Notification {
   type        NotificationType
   channel     NotificationChannel @default(IN_APP)
   status      NotificationStatus  @default(UNREAD)
-  
+
   title       String
   message     String              @db.Text
   data        Json?
-  
+
   readAt      DateTime?
   sentAt      DateTime?
-  
+
   createdAt   DateTime            @default(now())
-  
+
+  relatedId   String?
+  relatedType String?
+
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([status])
   @@index([createdAt])

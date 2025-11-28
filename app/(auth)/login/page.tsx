@@ -1,14 +1,49 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [callbackUrl, setCallbackUrl] = useState('/dashboard')
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('registered') === 'true') {
+        toast.success('Account created — please sign in')
+      }
+      const cb = params.get('callbackUrl')
+      if (cb) {
+        // sanitize callbackUrl: ignore NextAuth provider/signin routes
+        const lower = cb.toLowerCase()
+        if (!lower.includes('/api/auth') && !lower.includes('signin') && !lower.includes('google')) {
+          // avoid synchronous state update inside the effect body
+          setTimeout(() => setCallbackUrl(cb), 0)
+        }
+      }
+    } catch {
+      // window may not be available during SSR; ignore
+    }
+  }, [])
+
+  const isSafeRedirect = (url?: string | null) => {
+    if (!url) return false
+    try {
+      const lower = url.toLowerCase()
+      // reject login pages, provider routes, and provider keywords
+      if (lower.includes('/login') || lower.includes('/api/auth') || lower.includes('signin') || lower.includes('google')) {
+        return false
+      }
+      return true
+    } catch {
+      return false
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -27,13 +62,25 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError('Invalid email or password')
+        const msg = 'Invalid email or password'
+        setError(msg)
+        toast.error(msg)
         setLoading(false)
       } else {
-        window.location.href = '/dashboard'
+        toast.success('Signed in')
+        // prefer the URL returned by NextAuth only if it's safe
+        if (isSafeRedirect(result?.url)) {
+          window.location.href = result!.url!
+        } else if (isSafeRedirect(callbackUrl)) {
+          window.location.href = callbackUrl
+        } else {
+          window.location.href = '/dashboard'
+        }
       }
-    } catch (error) {
-      setError('An error occurred. Please try again.')
+    } catch {
+      const msg = 'An error occurred. Please try again.'
+      setError(msg)
+      toast.error(msg)
       setLoading(false)
     }
   }
@@ -43,15 +90,17 @@ export default function LoginPage() {
     setError('')
     
     try {
-      await signIn('google', { callbackUrl: '/dashboard' })
-    } catch (error) {
-      setError('Failed to sign in with Google')
+      await signIn('google', { callbackUrl })
+    } catch {
+      const msg = 'Failed to sign in with Google'
+      setError(msg)
+      toast.error(msg)
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -172,8 +221,7 @@ export default function LoginPage() {
 
           {/* Sign Up Link */}
           <div className="text-center">
-            <p className="text-gray-600">
-              Don't have an account?{' '}
+            <p className="text-gray-600">{"Don't have an account? "}
               <Link href="/signup" className="text-emerald-600 hover:text-emerald-700 font-semibold">
                 Sign up
               </Link>

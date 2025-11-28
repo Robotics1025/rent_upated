@@ -232,7 +232,7 @@ export default function EditUnitPage() {
   }
 
   const calculateBalance = () => {
-    if (!currentTenancy) return { totalDue: 0, totalPaid: 0, balance: 0, monthsPaid: 0 }
+    if (!currentTenancy) return { totalDue: 0, totalPaid: 0, balance: 0, monthsPaid: 0, depositPaid: 0 }
 
     const startDate = new Date(currentTenancy.startDate)
     const endDate = currentTenancy.endDate ? new Date(currentTenancy.endDate) : new Date()

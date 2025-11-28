@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { Building2, Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -46,14 +47,19 @@ export default function SignupPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        setError(result.error || 'Failed to create account')
+        const msg = result.error || 'Failed to create account'
+        setError(msg)
+        toast.error(msg)
         setLoading(false)
       } else {
+        toast.success('Account created — please sign in')
         // Redirect to login
         window.location.href = '/login?registered=true'
       }
     } catch (error) {
-      setError('An error occurred. Please try again.')
+      const msg = 'An error occurred. Please try again.'
+      setError(msg)
+      toast.error(msg)
       setLoading(false)
     }
   }
@@ -65,7 +71,9 @@ export default function SignupPage() {
     try {
       await signIn('google', { callbackUrl: '/dashboard' })
     } catch (error) {
-      setError('Failed to sign in with Google')
+      const msg = 'Failed to sign in with Google'
+      setError(msg)
+      toast.error(msg)
       setLoading(false)
     }
   }

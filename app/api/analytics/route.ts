@@ -59,7 +59,8 @@ export async function GET(request: NextRequest) {
     payments.forEach(payment => {
       if (payment.paidAt) {
         const monthKey = payment.paidAt.toISOString().substring(0, 7) // YYYY-MM
-        monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + payment.amount
+        const amount = typeof payment.amount === 'number' ? payment.amount : Number(payment.amount)
+        monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + amount
       }
     })
 
@@ -69,18 +70,20 @@ export async function GET(request: NextRequest) {
       if (payment.booking?.unit?.property) {
         const propertyId = payment.booking.unit.property.id
         const propertyName = payment.booking.unit.property.name
+        const amount = typeof payment.amount === 'number' ? payment.amount : Number(payment.amount)
         
         if (!revenueByProperty[propertyId]) {
           revenueByProperty[propertyId] = { name: propertyName, amount: 0 }
         }
-        revenueByProperty[propertyId].amount += payment.amount
+        revenueByProperty[propertyId].amount += amount
       }
     })
 
     // Group payments by method
     const paymentMethods: { [key: string]: number } = {}
     payments.forEach(payment => {
-      paymentMethods[payment.method] = (paymentMethods[payment.method] || 0) + payment.amount
+      const amount = typeof payment.amount === 'number' ? payment.amount : Number(payment.amount)
+      paymentMethods[payment.method] = (paymentMethods[payment.method] || 0) + amount
     })
 
     // Get occupancy statistics
@@ -123,11 +126,12 @@ export async function GET(request: NextRequest) {
         const tenantId = payment.tenant.id
         const tenantName = `${payment.tenant.firstName} ${payment.tenant.lastName}`
         const tenantEmail = payment.tenant.email
+        const amount = typeof payment.amount === 'number' ? payment.amount : Number(payment.amount)
 
         if (!tenantPayments[tenantId]) {
           tenantPayments[tenantId] = { name: tenantName, email: tenantEmail, amount: 0 }
         }
-        tenantPayments[tenantId].amount += payment.amount
+        tenantPayments[tenantId].amount += amount
       }
     })
 
@@ -135,13 +139,18 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 10)
 
+    const totalRevenue = payments.reduce((sum, p) => {
+      const amount = typeof p.amount === 'number' ? p.amount : Number(p.amount)
+      return sum + amount
+    }, 0)
+
     return NextResponse.json({
       monthlyRevenue,
       revenueByProperty: Object.values(revenueByProperty),
       paymentMethods,
       occupancyByProperty: Object.values(occupancyByProperty),
       topTenants,
-      totalRevenue: payments.reduce((sum, p) => sum + p.amount, 0),
+      totalRevenue,
       totalTransactions: payments.length,
     })
   } catch (error) {

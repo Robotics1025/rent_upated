@@ -72,7 +72,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: `${user.firstName} ${user.lastName}`,
           role: user.role,
-          avatar: user.avatar,
+          avatar: user.avatar === null ? undefined : user.avatar,
           firstName: user.firstName,
           lastName: user.lastName,
         }
@@ -114,7 +114,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role
         token.id = user.id
-        token.avatar = user.avatar
+        token.avatar = user.avatar === null ? undefined : user.avatar
         token.firstName = user.firstName
         token.lastName = user.lastName
       } else if (account?.provider === "google" && token.email) {
@@ -126,7 +126,7 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           token.role = dbUser.role
           token.id = dbUser.id
-          token.avatar = dbUser.avatar
+          token.avatar = dbUser.avatar === null ? undefined : dbUser.avatar
           token.firstName = dbUser.firstName
           token.lastName = dbUser.lastName
         }
@@ -137,7 +137,7 @@ export const authOptions: NextAuthOptions = {
           select: { avatar: true, firstName: true, lastName: true, role: true }
         })
         if (dbUser) {
-          token.avatar = dbUser.avatar
+          token.avatar = dbUser.avatar === null ? undefined : dbUser.avatar
           token.firstName = dbUser.firstName
           token.lastName = dbUser.lastName
           token.role = dbUser.role

@@ -67,7 +67,8 @@ export default function ReceiptPage() {
   }
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    // react-to-print v2 expects a ref object via `contentRef` instead of a `content` function
+    contentRef: componentRef,
   })
 
   if (loading) {

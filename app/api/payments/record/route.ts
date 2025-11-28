@@ -87,7 +87,8 @@ export async function POST(request: NextRequest) {
         // If first payment and no tenancy exists, create one
         if (paymentCount === 1 && !booking.tenancy) {
           const isDeposit = body.purpose === 'DEPOSIT' || body.paymentPurpose === 'DEPOSIT'
-          
+          // Generate a unique tenancy number
+          const tenancyNumber = `TNY-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
           await prisma.tenancy.create({
             data: {
               tenantId: body.tenantId,
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
               status: 'ACTIVE',
               monthlyRent: booking.unit.price,
               depositPaid: isDeposit ? body.amount : 0,
+              tenancyNumber,
             },
           })
 
@@ -113,7 +115,6 @@ export async function POST(request: NextRequest) {
               type: 'SYSTEM_ALERT',
               title: 'Unit Occupied',
               message: `Your unit ${booking.unit.unitCode} is now marked as occupied. Welcome!`,
-              relatedId: booking.unitId,
               relatedType: 'UNIT',
               status: 'UNREAD',
             },

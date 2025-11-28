@@ -12,11 +12,12 @@ import NotificationBell from './NotificationBell'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
+  userRole?: string
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, userRole: propUserRole }: DashboardLayoutProps) {
   const { data: session } = useSession()
-  const userRole = session?.user?.role || 'TENANT'
+  const userRole = propUserRole || session?.user?.role || 'TENANT'
   const userAvatar = session?.user?.image || session?.user?.avatar
   const userName = session?.user?.name || `${session?.user?.firstName || ''} ${session?.user?.lastName || ''}`.trim() || 'User'
   const [sidebarOpen, setSidebarOpen] = useState(true)
