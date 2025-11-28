@@ -156,6 +156,17 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
+    // Ensure NextAuth only redirects to allowed locations
+    async redirect({ url, baseUrl }) {
+      try {
+        const allowedOrigins = [baseUrl, process.env.NEXTAUTH_URL].filter(Boolean) as string[]
+        const target = new URL(url, baseUrl)
+        if (allowedOrigins.includes(target.origin)) return url
+      } catch {
+        // fall back to baseUrl
+      }
+      return baseUrl
+    },
   },
   pages: {
     signIn: '/login',
