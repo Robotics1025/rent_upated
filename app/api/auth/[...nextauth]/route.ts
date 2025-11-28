@@ -50,23 +50,28 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log('[NextAuth][authorize] missing credentials', { email: credentials?.email })
           throw new Error('Invalid credentials')
         }
 
+        console.log('[NextAuth][authorize] attempt for', credentials.email)
         const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         })
 
         if (!user || user.status !== 'ACTIVE') {
+          console.log('[NextAuth][authorize] no active user for', credentials.email)
           throw new Error('Invalid credentials')
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.password)
 
         if (!isValid) {
+          console.log('[NextAuth][authorize] invalid password for', credentials.email)
           throw new Error('Invalid credentials')
         }
 
+        console.log('[NextAuth][authorize] success for', credentials.email)
         return {
           id: user.id,
           email: user.email,
@@ -80,7 +85,8 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
+      console.log('[NextAuth][signIn] account:', account?.provider, 'user:', user?.email)
       if (account?.provider === "google") {
         try {
           const existingUser = await prisma.user.findUnique({
@@ -102,9 +108,10 @@ export const authOptions: NextAuthOptions = {
               }
             })
           }
+          console.log('[NextAuth][signIn] google signIn processed for', user.email)
           return true
         } catch (error) {
-          console.error('Error in signIn callback:', error)
+          console.error('[NextAuth][signIn] Error in signIn callback:', error)
           return false
         }
       }
@@ -159,12 +166,19 @@ export const authOptions: NextAuthOptions = {
     // Ensure NextAuth only redirects to allowed locations
     async redirect({ url, baseUrl }) {
       try {
+        console.log('[NextAuth][redirect] requested url:', url, 'baseUrl:', baseUrl)
         const allowedOrigins = [baseUrl, process.env.NEXTAUTH_URL].filter(Boolean) as string[]
         const target = new URL(url, baseUrl)
-        if (allowedOrigins.includes(target.origin)) return url
-      } catch {
+        console.log('[NextAuth][redirect] target origin:', target.origin, 'allowed:', allowedOrigins)
+        if (allowedOrigins.includes(target.origin)) {
+          console.log('[NextAuth][redirect] allowed redirect to', url)
+          return url
+        }
+      } catch (err) {
+        console.error('[NextAuth][redirect] error parsing url:', err)
         // fall back to baseUrl
       }
+      console.log('[NextAuth][redirect] falling back to baseUrl', baseUrl)
       return baseUrl
     },
   },
