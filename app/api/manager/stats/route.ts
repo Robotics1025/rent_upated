@@ -48,11 +48,20 @@ export async function GET() {
     currentMonth.setDate(1)
     currentMonth.setHours(0, 0, 0, 0)
 
+    // Get all tenant IDs from tenancies in managed properties
+    const tenancies = await prisma.tenancy.findMany({
+      where: {
+        unit: { propertyId: { in: propertyIds } },
+      },
+      select: { tenantId: true },
+    })
+
+    const tenantIds = [...new Set(tenancies.map(t => t.tenantId))]
+
+    // Get payments from those tenants for current month
     const payments = await prisma.payment.findMany({
       where: {
-        booking: {
-          unit: { propertyId: { in: propertyIds } },
-        },
+        tenantId: { in: tenantIds },
         status: 'SUCCESS',
         createdAt: { gte: currentMonth },
       },
@@ -83,12 +92,10 @@ export async function GET() {
       take: 5,
     })
 
-    // Get recent payments
+    // Get recent payments from tenants in managed properties
     const recentPayments = await prisma.payment.findMany({
       where: {
-        booking: {
-          unit: { propertyId: { in: propertyIds } },
-        },
+        tenantId: { in: tenantIds },
       },
       include: {
         tenant: {
