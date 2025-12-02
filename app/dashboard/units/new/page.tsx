@@ -1,7 +1,6 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
-import DashboardLayout from '@/app/components/DashboardLayout'
 import { Home, ArrowLeft, Building2, DollarSign, Bed, Bath, X, Upload, Image as ImageIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -156,7 +155,6 @@ export default function NewUnitPage() {
   }
 
   return (
-    <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -573,6 +571,5 @@ export default function NewUnitPage() {
           </div>
         </div>
       )}
-    </DashboardLayout>
   )
 }

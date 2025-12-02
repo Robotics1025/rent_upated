@@ -21,10 +21,12 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [isShaking, setIsShaking] = useState(false)
+  const [prevUnreadCount, setPrevUnreadCount] = useState(0)
 
   useEffect(() => {
     fetchNotifications()
-    
+
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000)
     return () => clearInterval(interval)
@@ -36,6 +38,14 @@ export default function NotificationBell() {
       if (res.ok) {
         const data = await res.json()
         setNotifications(data)
+
+        const newUnreadCount = data.filter((n: any) => n.status === 'UNREAD').length
+        if (newUnreadCount > prevUnreadCount) {
+          setIsShaking(true)
+          setTimeout(() => setIsShaking(false), 1000)
+          toast.info(`You have ${newUnreadCount - prevUnreadCount} new notification${newUnreadCount - prevUnreadCount > 1 ? 's' : ''}`)
+        }
+        setPrevUnreadCount(newUnreadCount)
       } else if (res.status === 401) {
         // User not authenticated, don't show error
         setNotifications([])
@@ -54,9 +64,9 @@ export default function NotificationBell() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'READ' }),
       })
-      
+
       if (res.ok) {
-        setNotifications(notifications.map(n => 
+        setNotifications(notifications.map(n =>
           n.id === id ? { ...n, status: 'READ', readAt: new Date().toISOString() } : n
         ))
       }
@@ -86,7 +96,7 @@ export default function NotificationBell() {
       const res = await fetch(`/api/notifications/${id}`, {
         method: 'DELETE',
       })
-      
+
       if (res.ok) {
         setNotifications(notifications.filter(n => n.id !== id))
         toast.success('Notification deleted')
@@ -99,7 +109,7 @@ export default function NotificationBell() {
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id)
     setIsOpen(false)
-    
+
     // Navigate based on notification type
     switch (notification.type) {
       case 'BOOKING_CONFIRMATION':
@@ -132,7 +142,7 @@ export default function NotificationBell() {
 
   const formatTimeAgo = (date: string) => {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000)
-    
+
     if (seconds < 60) return 'Just now'
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
@@ -145,7 +155,7 @@ export default function NotificationBell() {
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        className={`relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors ${isShaking ? 'animate-shake' : ''}`}
         aria-label="Notifications"
       >
         <Bell className="h-6 w-6" />
@@ -163,8 +173,8 @@ export default function NotificationBell() {
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-200 z-50 max-h-[600px] flex flex-col">
+
+          <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-200 z-50 max-h-[600px] flex flex-col animate-in fade-in zoom-in-95 duration-200 origin-top-right">
             {/* Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div>
@@ -197,9 +207,8 @@ export default function NotificationBell() {
                   {notifications.slice(0, 10).map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer group ${
-                        notification.status === 'UNREAD' ? 'bg-emerald-50/30' : ''
-                      }`}
+                      className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer group ${notification.status === 'UNREAD' ? 'bg-emerald-50/30' : ''
+                        }`}
                       onClick={() => handleNotificationClick(notification)}
                     >
                       <div className="flex gap-3">
@@ -211,20 +220,19 @@ export default function NotificationBell() {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <p className={`text-sm font-medium text-gray-900 ${
-                              notification.status === 'UNREAD' ? 'font-semibold' : ''
-                            }`}>
+                            <p className={`text-sm font-medium text-gray-900 ${notification.status === 'UNREAD' ? 'font-semibold' : ''
+                              }`}>
                               {notification.title}
                             </p>
                             {notification.status === 'UNREAD' && (
                               <div className="w-2 h-2 bg-emerald-600 rounded-full flex-shrink-0 mt-1" />
                             )}
                           </div>
-                          
+
                           <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                             {notification.message}
                           </p>
-                          
+
                           <p className="text-xs text-gray-500 mt-2">
                             {formatTimeAgo(notification.createdAt)}
                           </p>

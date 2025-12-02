@@ -1,7 +1,6 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
-import DashboardLayout from '@/app/components/DashboardLayout'
 import { ArrowLeft, Upload, X, Building2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -105,7 +104,6 @@ export default function NewPropertyPage() {
   }
 
   return (
-    <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -492,6 +490,5 @@ export default function NewPropertyPage() {
           </div>
         </form>
       </div>
-    </DashboardLayout>
   )
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import DashboardLayout from '@/app/components/DashboardLayout'
 import { Bell, Check, Trash2, Mail, MessageSquare, AlertCircle, DollarSign } from 'lucide-react'
 
 interface Notification {
@@ -80,9 +79,7 @@ export default function NotificationsPage() {
     OTHER: Bell,
   }
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
+  return (      <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -188,7 +185,5 @@ export default function NotificationsPage() {
             })
           )}
         </div>
-      </div>
-    </DashboardLayout>
-  )
+      </div>  )
 }

@@ -6,6 +6,7 @@ interface CreateNotificationParams {
   title: string
   message: string
   data?: any
+  channel?: 'IN_APP' | 'EMAIL' | 'SMS' | 'PUSH'
 }
 
 export async function createNotification(params: CreateNotificationParams) {
@@ -14,7 +15,7 @@ export async function createNotification(params: CreateNotificationParams) {
       data: {
         userId: params.userId,
         type: params.type,
-        channel: 'IN_APP',
+        channel: params.channel || 'IN_APP',
         status: 'UNREAD',
         title: params.title,
         message: params.message,
@@ -86,5 +87,15 @@ export async function notifyUnitAdded(managerId: string, unitCode: string, prope
     title: 'Unit Added Successfully ✅',
     message: `Unit ${unitCode} has been added to ${propertyName}.`,
     data: { unitCode, propertyName },
+  })
+}
+
+export async function notifyPaymentRecordedForManager(managerId: string, amount: number, tenantName: string, transactionId: string) {
+  return createNotification({
+    userId: managerId,
+    type: 'PAYMENT_RECEIPT',
+    title: 'Payment Recorded 📝',
+    message: `You recorded a payment of ${amount.toLocaleString()} UGX for ${tenantName}. Transaction ID: ${transactionId}`,
+    data: { amount, tenantName, transactionId },
   })
 }

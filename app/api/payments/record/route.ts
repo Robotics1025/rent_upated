@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { prisma } from '@/lib/prisma'
-import { notifyPaymentReceived } from '@/lib/notifications'
+import { notifyPaymentReceived, notifyPaymentRecordedForManager } from '@/lib/notifications'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +12,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+
+    // Validate required fields
+    if (!body.tenantId || !body.amount || !body.purpose || !body.method) {
+      return NextResponse.json(
+        { error: 'Missing required fields: tenantId, amount, purpose, method' },
+        { status: 400 }
+      )
+    }
+
+    // Validate payment purpose (use correct enum values)
+    const validPurposes = ['BOOKING_DEPOSIT', 'MONTHLY_RENT', 'SECURITY_DEPOSIT', 'UTILITIES', 'MAINTENANCE_FEE', 'LATE_FEE', 'REFUND', 'OTHER']
+    const purpose = body.purpose || body.paymentPurpose
+
+    if (!validPurposes.includes(purpose)) {
+      return NextResponse.json(
+        { error: `Invalid purpose. Must be one of: ${validPurposes.join(', ')}` },
+        { status: 400 }
+      )
+    }
 
     // Generate unique transaction ID
     const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
@@ -23,9 +42,9 @@ export async function POST(request: NextRequest) {
         tenantId: body.tenantId,
         bookingId: body.bookingId || null,
         amount: body.amount,
-        currency: 'UGX',
-        purpose: body.paymentPurpose || body.purpose,
-        method: body.paymentMethod || body.method,
+        currency: body.currency || 'UGX',
+        purpose,
+        method: body.method || body.paymentMethod,
         status: 'SUCCESS',
         description: body.description,
         paymentMonth: body.paymentMonth || null,
@@ -68,6 +87,18 @@ export async function POST(request: NextRequest) {
     // Send notification to tenant
     await notifyPaymentReceived(body.tenantId, body.amount, transactionId)
 
+    // Send notification to manager (if recorded by a user)
+    if (session.user.id) {
+      const tenantName = `${payment.tenant.firstName} ${payment.tenant.lastName}`
+      // We need to import this function first, I'll add the import in a separate block if needed or assume it's available if I update imports.
+      // Actually, I need to update imports first.
+      // Wait, I can do it in one go if I'm careful, but replace_file_content is for contiguous blocks.
+      // I'll just add the call here and update imports in another step or use multi_replace if I was smart, but I'll do it sequentially.
+      // actually, I can just use the imported function if I add the import.
+      // Let's just add the call here.
+      await notifyPaymentRecordedForManager(session.user.id, body.amount, tenantName, transactionId)
+    }
+
     // Auto-update unit status and create tenancy if needed
     if (body.bookingId) {
       const booking = await prisma.booking.findUnique({
@@ -79,6 +110,14 @@ export async function POST(request: NextRequest) {
       })
 
       if (booking && booking.unit) {
+        // Only create tenancy if booking is CONFIRMED
+        if (booking.status !== 'CONFIRMED') {
+          return NextResponse.json(
+            { error: 'Cannot process payment for unconfirmed booking' },
+            { status: 400 }
+          )
+        }
+
         // Check if this is the first payment
         const paymentCount = await prisma.payment.count({
           where: { bookingId: body.bookingId },
@@ -86,7 +125,7 @@ export async function POST(request: NextRequest) {
 
         // If first payment and no tenancy exists, create one
         if (paymentCount === 1 && !booking.tenancy) {
-          const isDeposit = body.purpose === 'DEPOSIT' || body.paymentPurpose === 'DEPOSIT'
+          const isDeposit = purpose === 'BOOKING_DEPOSIT' || purpose === 'SECURITY_DEPOSIT'
           // Generate a unique tenancy number
           const tenancyNumber = `TNY-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
           await prisma.tenancy.create({
@@ -94,7 +133,7 @@ export async function POST(request: NextRequest) {
               tenantId: body.tenantId,
               unitId: booking.unitId,
               bookingId: booking.id,
-              startDate: new Date(),
+              startDate: booking.checkInDate || new Date(),
               status: 'ACTIVE',
               monthlyRent: booking.unit.price,
               depositPaid: isDeposit ? body.amount : 0,

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import DashboardLayout from '@/app/components/DashboardLayout'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { TrendingUp, DollarSign, Calendar, Download, Building2, Users } from 'lucide-react'
 
@@ -98,28 +97,18 @@ export default function AnalyticsPage() {
   }
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-96">
+    return (        <div className="flex items-center justify-center h-96">
           <div className="animate-spin w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full"></div>
-        </div>
-      </DashboardLayout>
-    )
+        </div>    )
   }
 
   if (!analytics) {
-    return (
-      <DashboardLayout>
-        <div className="text-center py-12">
+    return (        <div className="text-center py-12">
           <p className="text-red-600">Failed to load analytics</p>
-        </div>
-      </DashboardLayout>
-    )
+        </div>    )
   }
 
-  return (
-    <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-6">
+  return (      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -277,7 +266,5 @@ export default function AnalyticsPage() {
             </table>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
-  )
+      </div>  )
 }

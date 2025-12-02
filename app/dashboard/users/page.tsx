@@ -1,4 +1,3 @@
-import DashboardLayout from '@/app/components/DashboardLayout'
 import { Users, Plus, Search, Mail, Phone, Shield, Edit, Trash2, MoreVertical } from 'lucide-react'
 
 export default function UsersManagementPage() {
@@ -17,9 +16,7 @@ export default function UsersManagementPage() {
     { label: 'Suspended', value: '3', color: 'bg-red-50 text-red-600' },
   ]
 
-  return (
-    <DashboardLayout userRole="ADMIN">
-      <div className="space-y-6">
+  return (      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -170,7 +167,5 @@ export default function UsersManagementPage() {
             </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
-  )
+      </div>  )
 }
