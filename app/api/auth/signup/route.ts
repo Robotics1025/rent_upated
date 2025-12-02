@@ -65,13 +65,13 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // Validate role if provided
-    const validRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER']
-    const userRole = role && validRoles.includes(role) ? role : 'MEMBER'
+    const validRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER']
+    const userRole = role && validRoles.includes(role) ? role : 'MANAGER'
 
-    // Only allow MEMBER registration by default (admins created by super admin)
-    if (role && role !== 'MEMBER') {
+    // Only allow MANAGER registration (admins created by super admin, tenants use separate app)
+    if (role && role !== 'MANAGER') {
       return NextResponse.json(
-        { error: 'Cannot self-register as admin. Please register as MEMBER.' },
+        { error: 'Only MANAGER registration is allowed. Admins must be created by super admin.' },
         { status: 403 }
       )
     }

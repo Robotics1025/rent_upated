@@ -16,10 +16,7 @@ export async function GET(request: NextRequest) {
     // Build where clause based on user role
     const where: any = {}
 
-    if (user.role === 'MEMBER') {
-      // Members can only see their own payments
-      where.tenantId = user.id
-    } else if (user.role === 'MANAGER') {
+    if (user.role === 'MANAGER') {
       // Managers can see payments for their assigned properties
       const assignments = await prisma.adminAssignment.findMany({
         where: { adminId: user.id },

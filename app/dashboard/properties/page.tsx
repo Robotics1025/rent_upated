@@ -31,11 +31,8 @@ export default function PropertiesPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   // Only managers and admins can access this page
-  useEffect(() => {
-    if (session?.user?.role === 'MEMBER') {
-      router.push('/dashboard/tenant')
-    }
-  }, [session, router])
+  // (MEMBER role no longer has dashboard access)
+
 
   useEffect(() => {
     fetchProperties()

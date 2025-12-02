@@ -24,7 +24,7 @@ interface SearchResult {
 export default function DashboardLayout({ children, userRole: propUserRole }: DashboardLayoutProps) {
   const { data: session, status } = useSession()
   const isLoading = status === 'loading'
-  const userRole = propUserRole || session?.user?.role || (isLoading ? null : 'TENANT')
+  const userRole = propUserRole || session?.user?.role || (isLoading ? null : 'MANAGER')
   const userAvatar = session?.user?.image || session?.user?.avatar
   const userName = session?.user?.name || `${session?.user?.firstName || ''} ${session?.user?.lastName || ''}`.trim() || 'User'
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -106,19 +106,18 @@ export default function DashboardLayout({ children, userRole: propUserRole }: Da
   // Each role gets their own dashboard route
   const getDashboardHref = () => {
     if (userRole === 'MANAGER') return '/dashboard/manager'
-    if (userRole === 'MEMBER') return '/dashboard/tenant'
     return '/dashboard' // ADMIN and SUPER_ADMIN
   }
 
   const navigation = [
-    { name: 'Dashboard', href: getDashboardHref(), icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Dashboard', href: getDashboardHref(), icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
     { name: 'Properties', href: '/dashboard/properties', icon: Building2, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
     { name: 'Units', href: '/dashboard/units', icon: Home, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
-    { name: 'Bookings', href: '/dashboard/bookings', icon: FileText, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Bookings', href: '/dashboard/bookings', icon: FileText, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
     { name: 'Users', href: '/dashboard/users', icon: Users, roles: ['SUPER_ADMIN', 'ADMIN'] },
-    { name: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
     { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MEMBER'] },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'] },
   ]
 
   const filteredNavigation = userRole ? navigation.filter(item => item.roles.includes(userRole as string)) : []

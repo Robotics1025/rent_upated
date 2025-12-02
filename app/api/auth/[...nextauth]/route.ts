@@ -94,20 +94,45 @@ export const authOptions: NextAuthOptions = {
           })
 
           if (!existingUser) {
-            // Create new user from Google
+            // Create new user from Google with email verification
             const nameParts = user.name?.split(' ') || ['User', '']
-            await prisma.user.create({
+            const newUser = await prisma.user.create({
               data: {
                 email: user.email!,
                 firstName: nameParts[0] || 'User',
                 lastName: nameParts.slice(1).join(' ') || '',
                 password: '', // Google users don't have password
                 role: 'MEMBER',
-                status: 'ACTIVE',
-                emailVerified: new Date(),
+                status: 'ACTIVE', // Auto-activate since Google verified the email
+                emailVerified: new Date(), // Email is verified by Google
               }
             })
+
+            // Create audit log for new OAuth user
+            await prisma.auditLog.create({
+              data: {
+                userId: newUser.id,
+                action: 'CREATE',
+                entityType: 'User',
+                entityId: newUser.id,
+                metadata: {
+                  email: newUser.email,
+                  role: newUser.role,
+                  provider: 'google',
+                  emailVerified: true,
+                },
+              }
+            })
+
+            console.log('[NextAuth][signIn] created new Google user:', user.email)
+          } else {
+            // Check if existing user is active
+            if (existingUser.status !== 'ACTIVE') {
+              console.log('[NextAuth][signIn] user not active:', user.email, 'status:', existingUser.status)
+              return false // Prevent login for inactive users
+            }
           }
+
           console.log('[NextAuth][signIn] google signIn processed for', user.email)
           return true
         } catch (error) {
