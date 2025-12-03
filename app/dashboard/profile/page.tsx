@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Camera, User, Mail, Phone, MapPin, Calendar, Edit, Shield, Settings } from 'lucide-react'
 import Link from 'next/link'
@@ -11,6 +11,8 @@ export default function ProfilePage() {
   const { data: session, update } = useSession()
   const [uploading, setUploading] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState(session?.user?.avatar || '')
+  const [stats, setStats] = useState({ properties: 0, tenants: 0 })
+  const [loadingStats, setLoadingStats] = useState(true)
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -53,6 +55,29 @@ export default function ProfilePage() {
       setUploading(false)
     }
   }
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/manager/stats')
+        if (res.ok) {
+          const data = await res.json()
+          setStats({
+            properties: data.properties || 0,
+            tenants: data.tenants || 0
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+      } finally {
+        setLoadingStats(false)
+      }
+    }
+
+    if (session) {
+      fetchStats()
+    }
+  }, [session])
 
   if (!session) {
     return <MicrochipLoader text="Loading profile..." />
@@ -133,11 +158,23 @@ export default function ProfilePage() {
 
               <div className="mt-8 pt-8 border-t border-gray-100 grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">0</p>
+                  {loadingStats ? (
+                    <div className="animate-pulse">
+                      <div className="h-8 w-12 bg-gray-200 rounded mx-auto"></div>
+                    </div>
+                  ) : (
+                    <p className="text-2xl font-bold text-gray-900">{stats.properties}</p>
+                  )}
                   <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-1">Properties</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">0</p>
+                  {loadingStats ? (
+                    <div className="animate-pulse">
+                      <div className="h-8 w-12 bg-gray-200 rounded mx-auto"></div>
+                    </div>
+                  ) : (
+                    <p className="text-2xl font-bold text-gray-900">{stats.tenants}</p>
+                  )}
                   <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-1">Tenants</p>
                 </div>
               </div>

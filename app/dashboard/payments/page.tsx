@@ -39,35 +39,18 @@ interface Booking {
   }
 }
 
+import RecordPaymentModal from './components/RecordPaymentModal'
+
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [showPaymentDialog, setShowPaymentDialog] = useState(false)
-  const [tenants, setTenants] = useState<Tenant[]>([])
-  const [bookings, setBookings] = useState<Booking[]>([])
-  const [selectedTenant, setSelectedTenant] = useState('')
-  const [paymentForm, setPaymentForm] = useState({
-    tenantId: '',
-    bookingId: '',
-    amount: '',
-    paymentMonth: '',
-    paymentDate: new Date().toISOString().split('T')[0],
-    paymentMethod: 'CASH',
-    purpose: 'MONTHLY_RENT',
-  })
 
   useEffect(() => {
     fetchPayments()
-    fetchTenants()
   }, [])
-
-  useEffect(() => {
-    if (selectedTenant) {
-      fetchBookings(selectedTenant)
-    }
-  }, [selectedTenant])
 
   const fetchPayments = async () => {
     try {
@@ -83,74 +66,9 @@ export default function PaymentsPage() {
     }
   }
 
-  const fetchTenants = async () => {
-    try {
-      const res = await fetch('/api/tenants')
-      const data = await res.json()
-      setTenants(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error('Error fetching tenants:', error)
-      setTenants([])
-    }
-  }
-
-  const fetchBookings = async (tenantId: string) => {
-    try {
-      const res = await fetch(`/api/bookings?tenantId=${tenantId}`)
-      const data = await res.json()
-      setBookings(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error('Error fetching bookings:', error)
-      setBookings([])
-    }
-  }
-
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const res = await fetch('/api/payments/record', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...paymentForm,
-          amount: parseFloat(paymentForm.amount),
-          method: paymentForm.paymentMethod,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to record payment')
-      }
-
-      toast.success('Payment recorded successfully!')
-      setShowPaymentDialog(false)
-      setPaymentForm({
-        tenantId: '',
-        bookingId: '',
-        amount: '',
-        paymentMonth: '',
-        paymentDate: new Date().toISOString().split('T')[0],
-        paymentMethod: 'CASH',
-        purpose: 'MONTHLY_RENT',
-      })
-      setSelectedTenant('')
-      fetchPayments()
-    } catch (error: any) {
-      console.error('Error recording payment:', error)
-      toast.error(error.message || 'Failed to record payment')
-    }
-  }
-
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setPaymentForm(prev => ({ ...prev, [name]: value }))
-
-    if (name === 'tenantId') {
-      setSelectedTenant(value)
-      setPaymentForm(prev => ({ ...prev, bookingId: '' }))
-    }
+  const handlePaymentSuccess = () => {
+    setShowPaymentDialog(false)
+    fetchPayments()
   }
 
   const filteredPayments = payments.filter(payment => {
@@ -377,160 +295,12 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      {/* Manual Payment Dialog */}
-      {showPaymentDialog && (
-        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Record Payment</h2>
-                <p className="text-sm text-gray-500">Manually record a transaction</p>
-              </div>
-              <button
-                onClick={() => setShowPaymentDialog(false)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-500"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handlePaymentSubmit} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Select Tenant *</label>
-                  <select
-                    name="tenantId"
-                    value={paymentForm.tenantId}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                  >
-                    <option value="">Choose a tenant...</option>
-                    {tenants.map((tenant) => (
-                      <option key={tenant.id} value={tenant.id}>
-                        {tenant.firstName} {tenant.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {selectedTenant && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Booking (Optional)</label>
-                    <select
-                      name="bookingId"
-                      value={paymentForm.bookingId}
-                      onChange={handleFormChange}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                    >
-                      <option value="">General Payment</option>
-                      {bookings.map((booking) => (
-                        <option key={booking.id} value={booking.id}>
-                          {booking.bookingNumber} - {booking.unit.unitCode}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Amount (UGX) *</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">UGX</span>
-                    <input
-                      type="number"
-                      name="amount"
-                      value={paymentForm.amount}
-                      onChange={handleFormChange}
-                      required
-                      min="0"
-                      className="w-full pl-14 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Purpose *</label>
-                  <select
-                    name="purpose"
-                    value={paymentForm.purpose}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                  >
-                    <option value="MONTHLY_RENT">Monthly Rent</option>
-                    <option value="SECURITY_DEPOSIT">Security Deposit</option>
-                    <option value="BOOKING_DEPOSIT">Booking Deposit</option>
-                    <option value="UTILITIES">Utilities</option>
-                    <option value="MAINTENANCE_FEE">Maintenance Fee</option>
-                    <option value="LATE_FEE">Late Fee</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Billing Month</label>
-                  <input
-                    type="month"
-                    name="paymentMonth"
-                    value={paymentForm.paymentMonth}
-                    onChange={handleFormChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Required for rent payments</p>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Payment Date *</label>
-                  <input
-                    type="date"
-                    name="paymentDate"
-                    value={paymentForm.paymentDate}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Method *</label>
-                  <select
-                    name="paymentMethod"
-                    value={paymentForm.paymentMethod}
-                    onChange={handleFormChange}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                  >
-                    <option value="CASH">Cash</option>
-                    <option value="MOBILE_MONEY">Mobile Money</option>
-                    <option value="BANK_TRANSFER">Bank Transfer</option>
-                    <option value="CREDIT_CARD">Credit Card</option>
-                    <option value="DEBIT_CARD">Debit Card</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-gray-100 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowPaymentDialog(false)}
-                  className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold"
-                >
-                  <CheckCircle className="w-5 h-5" />
-                  Record Payment
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Record Payment Modal */}
+      <RecordPaymentModal
+        isOpen={showPaymentDialog}
+        onClose={() => setShowPaymentDialog(false)}
+        onSuccess={handlePaymentSuccess}
+      />
     </div>
   )
 }

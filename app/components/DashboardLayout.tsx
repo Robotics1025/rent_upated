@@ -126,7 +126,16 @@ export default function DashboardLayout({ children, userRole: propUserRole }: Da
     <div className="min-h-screen bg-gray-50">
       {/* Search Modal (Ctrl+K) */}
       {showSearchModal && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-start justify-center pt-20">
+        <div
+          className="fixed inset-0 bg-black/50 z-[100] flex items-start justify-center pt-20"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowSearchModal(false)
+              setSearchQuery("")
+              setSearchResults(null)
+            }
+          }}
+        >
           <div className="w-full max-w-2xl mx-4 bg-white rounded-xl shadow-2xl" ref={searchRef}>
             <div className="p-4 border-b">
               <div className="relative">

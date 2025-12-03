@@ -12,102 +12,159 @@ export async function GET() {
 
     const userId = session.user.id
 
-    // Get manager's assigned properties
-    const assignments = await prisma.adminAssignment.findMany({
-      where: { adminId: userId },
-      select: { propertyId: true },
-    })
+    const userRole = session.user.role
 
-    const propertyIds = assignments.map(a => a.propertyId)
+    let properties, totalUnits, tenants, revenue, occupancyRate, recentBookings, recentPayments
 
-    // Get properties count
-    const properties = await prisma.property.count({
-      where: { id: { in: propertyIds } },
-    })
+    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') {
+      // --- ADMIN VIEW: FETCH ALL DATA ---
 
-    // Get units count and occupancy
-    const units = await prisma.unit.findMany({
-      where: { propertyId: { in: propertyIds } },
-      select: { status: true },
-    })
+      // Properties count
+      properties = await prisma.property.count()
 
-    const totalUnits = units.length
-    const occupiedUnits = units.filter(u => u.status === 'OCCUPIED').length
-    const occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0
+      // Units count and occupancy
+      const allUnits = await prisma.unit.findMany({
+        select: { status: true },
+      })
+      totalUnits = allUnits.length
+      const occupiedUnits = allUnits.filter(u => u.status === 'OCCUPIED').length
+      occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0
 
-    // Get active tenants count
-    const tenants = await prisma.tenancy.count({
-      where: {
-        unit: { propertyId: { in: propertyIds } },
-        status: 'ACTIVE',
-      },
-    })
+      // Active tenants count
+      tenants = await prisma.tenancy.count({
+        where: { status: 'ACTIVE' },
+      })
 
-    // Calculate monthly revenue
-    const currentMonth = new Date()
-    currentMonth.setDate(1)
-    currentMonth.setHours(0, 0, 0, 0)
+      // Monthly revenue (ALL successful payments this month)
+      const currentMonth = new Date()
+      currentMonth.setDate(1)
+      currentMonth.setHours(0, 0, 0, 0)
 
-    // Get all tenant IDs from tenancies in managed properties
-    const tenancies = await prisma.tenancy.findMany({
-      where: {
-        unit: { propertyId: { in: propertyIds } },
-      },
-      select: { tenantId: true },
-    })
-
-    const tenantIds = [...new Set(tenancies.map(t => t.tenantId))]
-
-    // Get payments from those tenants for current month
-    const payments = await prisma.payment.findMany({
-      where: {
-        tenantId: { in: tenantIds },
-        status: 'SUCCESS',
-        createdAt: { gte: currentMonth },
-      },
-      select: { amount: true },
-    })
-
-    const revenue = payments.reduce((sum, p) => sum + Number(p.amount), 0)
-
-    // Get recent bookings
-    const recentBookings = await prisma.booking.findMany({
-      where: {
-        unit: { propertyId: { in: propertyIds } },
-      },
-      include: {
-        tenant: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
+      const payments = await prisma.payment.findMany({
+        where: {
+          status: 'SUCCESS',
+          createdAt: { gte: currentMonth },
         },
-        unit: {
-          select: {
-            unitCode: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    })
+        select: { amount: true },
+      })
+      revenue = payments.reduce((sum, p) => sum + Number(p.amount), 0)
 
-    // Get recent payments from tenants in managed properties
-    const recentPayments = await prisma.payment.findMany({
-      where: {
-        tenantId: { in: tenantIds },
-      },
-      include: {
-        tenant: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
+      // Recent Bookings (ALL)
+      recentBookings = await prisma.booking.findMany({
+        include: {
+          tenant: { select: { firstName: true, lastName: true } },
+          unit: { select: { unitCode: true } },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    })
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      })
+
+      // Recent Payments (ALL)
+      recentPayments = await prisma.payment.findMany({
+        include: {
+          tenant: { select: { firstName: true, lastName: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      })
+
+    } else {
+      // --- MANAGER VIEW: FETCH SCOPED DATA ---
+
+      // Get manager's assigned properties
+      const assignments = await prisma.adminAssignment.findMany({
+        where: { adminId: userId },
+        select: { propertyId: true },
+      })
+      const propertyIds = assignments.map(a => a.propertyId)
+
+      // Properties count
+      properties = await prisma.property.count({
+        where: { id: { in: propertyIds } },
+      })
+
+      // Units count and occupancy
+      const units = await prisma.unit.findMany({
+        where: { propertyId: { in: propertyIds } },
+        select: { status: true },
+      })
+      totalUnits = units.length
+      const occupiedUnits = units.filter(u => u.status === 'OCCUPIED').length
+      occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0
+
+      // Active tenants count
+      tenants = await prisma.tenancy.count({
+        where: {
+          unit: { propertyId: { in: propertyIds } },
+          status: 'ACTIVE',
+        },
+      })
+
+      // Calculate monthly revenue
+      const currentMonth = new Date()
+      currentMonth.setDate(1)
+      currentMonth.setHours(0, 0, 0, 0)
+
+      // Get all tenant IDs from tenancies AND bookings in managed properties
+      const [tenancyList, bookingList] = await Promise.all([
+        prisma.tenancy.findMany({
+          where: { unit: { propertyId: { in: propertyIds } } },
+          select: { tenantId: true },
+        }),
+        prisma.booking.findMany({
+          where: { unit: { propertyId: { in: propertyIds } } },
+          select: { tenantId: true },
+        }),
+      ])
+
+      const tenantIds = [...new Set([
+        ...tenancyList.map(t => t.tenantId),
+        ...bookingList.map(b => b.tenantId)
+      ])]
+
+      // Get payments from those tenants for current month OR orphan payments (bookingId: null)
+      // Note: Including orphan payments allows managers to see payments they recorded that aren't linked to a booking yet.
+      const scopedPayments = await prisma.payment.findMany({
+        where: {
+          OR: [
+            { tenantId: { in: tenantIds } },
+            { bookingId: null } // Include orphan payments for managers too
+          ],
+          status: 'SUCCESS',
+          createdAt: { gte: currentMonth },
+        },
+        select: { amount: true },
+      })
+      revenue = scopedPayments.reduce((sum, p) => sum + Number(p.amount), 0)
+
+      // Recent Bookings
+      recentBookings = await prisma.booking.findMany({
+        where: {
+          unit: { propertyId: { in: propertyIds } },
+        },
+        include: {
+          tenant: { select: { firstName: true, lastName: true } },
+          unit: { select: { unitCode: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      })
+
+      // Recent Payments
+      recentPayments = await prisma.payment.findMany({
+        where: {
+          OR: [
+            { tenantId: { in: tenantIds } },
+            { bookingId: null } // Include orphan payments
+          ],
+        },
+        include: {
+          tenant: { select: { firstName: true, lastName: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      })
+    }
 
     return NextResponse.json({
       properties,

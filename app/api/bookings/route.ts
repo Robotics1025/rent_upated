@@ -30,6 +30,19 @@ export async function GET(request: NextRequest) {
     }
     // ADMIN and SUPER_ADMIN see all bookings (no filter)
 
+    // Add query param filters
+    const { searchParams } = new URL(request.url)
+    const tenantId = searchParams.get('tenantId')
+    const status = searchParams.get('status')
+
+    if (tenantId) {
+      where.tenantId = tenantId
+    }
+
+    if (status) {
+      where.status = status
+    }
+
     const bookings = await prisma.booking.findMany({
       where,
       include: {

@@ -6,6 +6,7 @@ import { Building2, Home, DollarSign, Users, TrendingUp, Calendar } from 'lucide
 import Link from 'next/link'
 import MicrochipLoader from '@/app/components/MicrochipLoader'
 import { toast } from 'sonner'
+import RecordPaymentModal from '@/app/dashboard/payments/components/RecordPaymentModal'
 
 interface ManagerStats {
   properties: number
@@ -21,6 +22,7 @@ export default function ManagerDashboard() {
   const { data: session, status } = useSession()
   const [stats, setStats] = useState<ManagerStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -115,7 +117,10 @@ export default function ManagerDashboard() {
             <div>
               <p className="text-sm font-medium text-gray-500">Monthly Revenue</p>
               <p className="text-3xl font-bold text-gray-900 mt-2 group-hover:text-green-600 transition-colors">
-                {(stats?.revenue || 0).toLocaleString()}
+                {new Intl.NumberFormat('en-US', {
+                  notation: 'compact',
+                  maximumFractionDigits: 1
+                }).format(stats?.revenue || 0)}
               </p>
               <p className="text-sm text-green-600 mt-1 font-medium flex items-center gap-1">
                 <TrendingUp className="w-4 h-4" />
@@ -237,16 +242,16 @@ export default function ManagerDashboard() {
             <p className="text-sm text-gray-500 mt-1">Create a new unit</p>
           </Link>
 
-          <Link
-            href="/dashboard/payments/record"
-            className="group p-6 border border-gray-200 rounded-2xl hover:border-green-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-gray-50 hover:bg-white"
+          <button
+            onClick={() => setShowPaymentDialog(true)}
+            className="group p-6 border border-gray-200 rounded-2xl hover:border-green-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-gray-50 hover:bg-white text-left w-full"
           >
             <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
               <DollarSign className="w-6 h-6 text-green-600" />
             </div>
             <p className="font-bold text-gray-900 group-hover:text-green-600 transition-colors">Record Payment</p>
             <p className="text-sm text-gray-500 mt-1">Log a new transaction</p>
-          </Link>
+          </button>
 
           <Link
             href="/dashboard/bookings"
@@ -260,6 +265,16 @@ export default function ManagerDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Record Payment Modal */}
+      <RecordPaymentModal
+        isOpen={showPaymentDialog}
+        onClose={() => setShowPaymentDialog(false)}
+        onSuccess={() => {
+          setShowPaymentDialog(false)
+          fetchManagerStats()
+        }}
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { TrendingUp, DollarSign, Calendar, Download, Building2, Users } from 'lucide-react'
+import MicrochipLoader from '@/app/components/MicrochipLoader'
 
 interface AnalyticsData {
   monthlyRevenue: { [key: string]: number }
@@ -28,7 +29,7 @@ export default function AnalyticsPage() {
     try {
       const res = await fetch('/api/analytics')
       if (!res.ok) throw new Error('Failed to fetch analytics')
-      
+
       const data = await res.json()
       setAnalytics(data)
     } catch (error) {
@@ -40,7 +41,7 @@ export default function AnalyticsPage() {
 
   const formatMonthlyData = () => {
     if (!analytics) return []
-    
+
     return Object.entries(analytics.monthlyRevenue)
       .map(([month, revenue]) => ({
         month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
@@ -51,7 +52,7 @@ export default function AnalyticsPage() {
 
   const formatPaymentMethodsData = () => {
     if (!analytics) return []
-    
+
     return Object.entries(analytics.paymentMethods).map(([method, amount]) => ({
       name: method.replace('_', ' '),
       value: amount,
@@ -60,7 +61,7 @@ export default function AnalyticsPage() {
 
   const formatOccupancyData = () => {
     if (!analytics) return []
-    
+
     return analytics.occupancyByProperty.map(item => ({
       name: item.name,
       occupied: item.occupied,
@@ -97,174 +98,178 @@ export default function AnalyticsPage() {
   }
 
   if (loading) {
-    return (        <div className="flex items-center justify-center h-96">
-          <div className="animate-spin w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full"></div>
-        </div>    )
+    return <MicrochipLoader text="Loading Analytics..." />
   }
 
   if (!analytics) {
-    return (        <div className="text-center py-12">
-          <p className="text-red-600">Failed to load analytics</p>
-        </div>    )
+    return (
+      <div className="text-center py-12">
+        <div className="inline-block p-4 bg-red-50 rounded-full mb-4">
+          <TrendingUp className="w-12 h-12 text-red-600" />
+        </div>
+        <p className="text-red-600 font-semibold text-lg">Failed to load analytics</p>
+        <p className="text-gray-500 mt-2">Please try refreshing the page</p>
+      </div>
+    )
   }
 
-  return (      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
+  return (<div className="max-w-7xl mx-auto space-y-6">
+    {/* Header */}
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Analytics & Reports</h1>
+        <p className="text-gray-600 mt-1">Performance metrics and insights</p>
+      </div>
+      <button
+        onClick={downloadReport}
+        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+      >
+        <Download className="w-4 h-4" />
+        Download Report
+      </button>
+    </div>
+
+    {/* Summary Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Analytics & Reports</h1>
-            <p className="text-gray-600 mt-1">Performance metrics and insights</p>
+            <p className="text-emerald-100 text-sm font-medium">Total Revenue (6 Months)</p>
+            <p className="text-3xl font-bold mt-2">{analytics.totalRevenue.toLocaleString()} UGX</p>
           </div>
-          <button
-            onClick={downloadReport}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Download Report
-          </button>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-100 text-sm font-medium">Total Revenue (6 Months)</p>
-                <p className="text-3xl font-bold mt-2">{analytics.totalRevenue.toLocaleString()} UGX</p>
-              </div>
-              <div className="bg-white bg-opacity-20 p-4 rounded-lg">
-                <DollarSign className="w-8 h-8" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Total Transactions</p>
-                <p className="text-3xl font-bold mt-2">{analytics.totalTransactions}</p>
-              </div>
-              <div className="bg-white bg-opacity-20 p-4 rounded-lg">
-                <Calendar className="w-8 h-8" />
-              </div>
-            </div>
+          <div className="bg-white bg-opacity-20 p-4 rounded-lg">
+            <DollarSign className="w-8 h-8" />
           </div>
         </div>
+      </div>
 
-        {/* Monthly Revenue Trend */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <TrendingUp className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Revenue Trend (Last 6 Months)</h2>
+      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-blue-100 text-sm font-medium">Total Transactions</p>
+            <p className="text-3xl font-bold mt-2">{analytics.totalTransactions}</p>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={formatMonthlyData()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value) => `${Number(value).toLocaleString()} UGX`} />
-              <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} name="Revenue" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue by Property */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Building2 className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Revenue by Property</h2>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={analytics.revenueByProperty}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip formatter={(value) => `${Number(value).toLocaleString()} UGX`} />
-                <Legend />
-                <Bar dataKey="amount" fill="#3b82f6" name="Revenue" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Payment Methods */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <DollarSign className="w-5 h-5 text-purple-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Payment Methods</h2>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={formatPaymentMethodsData()}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {formatPaymentMethodsData().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => `${Number(value).toLocaleString()} UGX`} />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="bg-white bg-opacity-20 p-4 rounded-lg">
+            <Calendar className="w-8 h-8" />
           </div>
         </div>
+      </div>
+    </div>
 
-        {/* Occupancy Rate */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Building2 className="w-5 h-5 text-orange-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Occupancy by Property</h2>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={formatOccupancyData()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="occupied" stackId="a" fill="#10b981" name="Occupied" />
-              <Bar dataKey="available" stackId="a" fill="#e5e7eb" name="Available" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+    {/* Monthly Revenue Trend */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <TrendingUp className="w-5 h-5 text-emerald-600" />
+        <h2 className="text-lg font-semibold text-gray-900">Revenue Trend (Last 6 Months)</h2>
+      </div>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={formatMonthlyData()}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="month" />
+          <YAxis />
+          <Tooltip formatter={(value) => `${Number(value).toLocaleString()} UGX`} />
+          <Legend />
+          <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} name="Revenue" />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
 
-        {/* Top Tenants */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Users className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Top Tenants by Payment Amount</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Rank</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Tenant Name</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Email</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Total Paid</th>
-                </tr>
-              </thead>
-              <tbody>
-                {analytics.topTenants.map((tenant, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-900">#{index + 1}</td>
-                    <td className="py-3 px-4 text-sm font-medium text-gray-900">{tenant.name}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">{tenant.email}</td>
-                    <td className="py-3 px-4 text-sm font-semibold text-emerald-600 text-right">
-                      {tenant.amount.toLocaleString()} UGX
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Revenue by Property */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Building2 className="w-5 h-5 text-blue-600" />
+          <h2 className="text-lg font-semibold text-gray-900">Revenue by Property</h2>
         </div>
-      </div>  )
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={analytics.revenueByProperty}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip formatter={(value) => `${Number(value).toLocaleString()} UGX`} />
+            <Legend />
+            <Bar dataKey="amount" fill="#3b82f6" name="Revenue" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Payment Methods */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <DollarSign className="w-5 h-5 text-purple-600" />
+          <h2 className="text-lg font-semibold text-gray-900">Payment Methods</h2>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={formatPaymentMethodsData()}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {formatPaymentMethodsData().map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip formatter={(value) => `${Number(value).toLocaleString()} UGX`} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+
+    {/* Occupancy Rate */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Building2 className="w-5 h-5 text-orange-600" />
+        <h2 className="text-lg font-semibold text-gray-900">Occupancy by Property</h2>
+      </div>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={formatOccupancyData()}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="occupied" stackId="a" fill="#10b981" name="Occupied" />
+          <Bar dataKey="available" stackId="a" fill="#e5e7eb" name="Available" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+
+    {/* Top Tenants */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Users className="w-5 h-5 text-emerald-600" />
+        <h2 className="text-lg font-semibold text-gray-900">Top Tenants by Payment Amount</h2>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Rank</th>
+              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Tenant Name</th>
+              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Email</th>
+              <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Total Paid</th>
+            </tr>
+          </thead>
+          <tbody>
+            {analytics.topTenants.map((tenant, index) => (
+              <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                <td className="py-3 px-4 text-sm text-gray-900">#{index + 1}</td>
+                <td className="py-3 px-4 text-sm font-medium text-gray-900">{tenant.name}</td>
+                <td className="py-3 px-4 text-sm text-gray-600">{tenant.email}</td>
+                <td className="py-3 px-4 text-sm font-semibold text-emerald-600 text-right">
+                  {tenant.amount.toLocaleString()} UGX
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>)
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, X, Check, Trash2 } from 'lucide-react'
+import { Bell, X, Check, Trash2, Calendar, DollarSign, AlertCircle, Megaphone, Wrench, MessageCircle, Pin } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -127,17 +127,17 @@ export default function NotificationBell() {
   }
 
   const getNotificationIcon = (type: string) => {
-    const icons: any = {
-      BOOKING_CONFIRMATION: '📅',
-      PAYMENT_RECEIPT: '💰',
-      RENT_REMINDER: '🔔',
-      SYSTEM_ALERT: '⚠️',
-      ADMIN_UPDATE: '📢',
-      MAINTENANCE_NOTICE: '🔧',
-      MESSAGE: '💬',
-      OTHER: '📌',
+    const iconConfig: any = {
+      BOOKING_CONFIRMATION: { icon: Calendar, bg: 'bg-blue-100', color: 'text-blue-600' },
+      PAYMENT_RECEIPT: { icon: DollarSign, bg: 'bg-emerald-100', color: 'text-emerald-600' },
+      RENT_REMINDER: { icon: Bell, bg: 'bg-purple-100', color: 'text-purple-600' },
+      SYSTEM_ALERT: { icon: AlertCircle, bg: 'bg-orange-100', color: 'text-orange-600' },
+      ADMIN_UPDATE: { icon: Megaphone, bg: 'bg-indigo-100', color: 'text-indigo-600' },
+      MAINTENANCE_NOTICE: { icon: Wrench, bg: 'bg-gray-100', color: 'text-gray-600' },
+      MESSAGE: { icon: MessageCircle, bg: 'bg-pink-100', color: 'text-pink-600' },
+      OTHER: { icon: Pin, bg: 'bg-gray-100', color: 'text-gray-600' },
     }
-    return icons[type] || '🔔'
+    return iconConfig[type] || { icon: Bell, bg: 'bg-gray-100', color: 'text-gray-600' }
   }
 
   const formatTimeAgo = (date: string) => {
@@ -166,31 +166,40 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown Panel */}
+      {/* Sidebar Panel */}
       {isOpen && (
         <>
+          {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
             onClick={() => setIsOpen(false)}
           />
 
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-200 z-50 max-h-[600px] flex flex-col animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+          {/* Sliding Panel from Right */}
+          <div className="fixed right-0 top-0 bottom-0 w-96 bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
-                {unreadCount > 0 && (
-                  <p className="text-sm text-gray-600">{unreadCount} unread</p>
-                )}
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-teal-50">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-2xl font-bold text-gray-900">Notifications</h3>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+                  aria-label="Close notifications"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
               </div>
               {unreadCount > 0 && (
-                <button
-                  onClick={markAllAsRead}
-                  disabled={loading}
-                  className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
-                >
-                  Mark all read
-                </button>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600 font-medium">{unreadCount} unread notification{unreadCount > 1 ? 's' : ''}</p>
+                  <button
+                    onClick={markAllAsRead}
+                    disabled={loading}
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-semibold hover:underline disabled:opacity-50"
+                  >
+                    Mark all read
+                  </button>
+                </div>
               )}
             </div>
 
@@ -198,55 +207,65 @@ export default function NotificationBell() {
             <div className="overflow-y-auto flex-1">
               {notifications.length === 0 ? (
                 <div className="p-12 text-center">
-                  <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600">No notifications yet</p>
-                  <p className="text-sm text-gray-500 mt-1">We'll notify you when something arrives</p>
+                  <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
+                    <Bell className="w-12 h-12 text-gray-400" />
+                  </div>
+                  <p className="text-gray-900 font-semibold text-lg">No notifications yet</p>
+                  <p className="text-sm text-gray-500 mt-2">We'll notify you when something arrives</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
-                  {notifications.slice(0, 10).map((notification) => (
+                  {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer group ${notification.status === 'UNREAD' ? 'bg-emerald-50/30' : ''
+                      className={`p-4 hover:bg-gray-50 transition-all cursor-pointer group ${notification.status === 'UNREAD' ? 'bg-emerald-50/50 border-l-4 border-emerald-500' : 'border-l-4 border-transparent'
                         }`}
                       onClick={() => handleNotificationClick(notification)}
                     >
                       <div className="flex gap-3">
                         {/* Icon */}
-                        <div className="flex-shrink-0 text-2xl">
-                          {getNotificationIcon(notification.type)}
+                        <div className="flex-shrink-0">
+                          {(() => {
+                            const iconData = getNotificationIcon(notification.type)
+                            const IconComponent = iconData.icon
+                            return (
+                              <div className={`p-2.5 rounded-xl ${iconData.bg} shadow-sm`}>
+                                <IconComponent className={`w-5 h-5 ${iconData.color}`} />
+                              </div>
+                            )
+                          })()}
                         </div>
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className={`text-sm font-medium text-gray-900 ${notification.status === 'UNREAD' ? 'font-semibold' : ''
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <p className={`text-sm font-medium text-gray-900 ${notification.status === 'UNREAD' ? 'font-bold' : ''
                               }`}>
                               {notification.title}
                             </p>
                             {notification.status === 'UNREAD' && (
-                              <div className="w-2 h-2 bg-emerald-600 rounded-full flex-shrink-0 mt-1" />
+                              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full flex-shrink-0 mt-1 animate-pulse" />
                             )}
                           </div>
 
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                          <p className="text-sm text-gray-600 mt-1 line-clamp-2 leading-relaxed">
                             {notification.message}
                           </p>
 
-                          <p className="text-xs text-gray-500 mt-2">
+                          <p className="text-xs text-gray-500 mt-2 font-medium">
                             {formatTimeAgo(notification.createdAt)}
                           </p>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex-shrink-0 flex items-start gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex-shrink-0 flex flex-col items-start gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {notification.status === 'UNREAD' && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
                                 markAsRead(notification.id)
                               }}
-                              className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors"
                               title="Mark as read"
                             >
                               <Check className="w-4 h-4" />
@@ -257,7 +276,7 @@ export default function NotificationBell() {
                               e.stopPropagation()
                               deleteNotification(notification.id)
                             }}
-                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -272,13 +291,13 @@ export default function NotificationBell() {
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div className="p-3 border-t border-gray-200">
+              <div className="p-4 border-t border-gray-200 bg-gray-50">
                 <button
                   onClick={() => {
                     setIsOpen(false)
                     router.push('/dashboard/notifications')
                   }}
-                  className="w-full text-center text-sm text-emerald-600 hover:text-emerald-700 font-medium py-2"
+                  className="w-full text-center text-sm text-white bg-emerald-600 hover:bg-emerald-700 font-semibold py-3 rounded-xl transition-colors shadow-sm hover:shadow-md"
                 >
                   View all notifications
                 </button>
