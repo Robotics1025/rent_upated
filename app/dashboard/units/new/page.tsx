@@ -93,7 +93,7 @@ export default function NewUnitPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.propertyId) {
       toast.error('Please select a property first')
       setShowPropertyDialog(true)
@@ -155,6 +155,7 @@ export default function NewUnitPage() {
   }
 
   return (
+    <>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -529,11 +530,10 @@ export default function NewUnitPage() {
                     <button
                       key={property.id}
                       onClick={() => handlePropertySelect(property)}
-                      className={`p-4 border-2 rounded-lg text-left transition-all ${
-                        selectedProperty?.id === property.id
+                      className={`p-4 border-2 rounded-lg text-left transition-all ${selectedProperty?.id === property.id
                           ? 'border-emerald-600 bg-emerald-50'
                           : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -571,5 +571,6 @@ export default function NewUnitPage() {
           </div>
         </div>
       )}
+    </>
   )
 }

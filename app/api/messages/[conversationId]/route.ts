@@ -4,13 +4,13 @@ import { getAuthUser, requireAuth } from '@/lib/auth'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { conversationId: string } }
+    { params }: { params: Promise<{ conversationId: string }> }
 ) {
     try {
         const user = await getAuthUser(request)
         requireAuth(user)
 
-        const conversationId = params.conversationId
+        const { conversationId } = await params
 
         // Verify user is participant
         const participant = await prisma.conversationParticipant.findFirst({
